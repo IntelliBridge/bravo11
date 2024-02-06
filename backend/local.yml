@@ -3,6 +3,7 @@ version: '3'
 volumes:
   bravo11_local_postgres_data: {}
   bravo11_local_postgres_data_backups: {}
+  opensearch-data: {}
 
 services:
   django: &django
@@ -14,6 +15,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - opensearch
     volumes:
       - .:/app:z
     env_file:
@@ -74,6 +76,32 @@ services:
       - postgres
     ports: []
     command: /start-celerybeat
+
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - cluster.name=opensearch-cluster
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - plugins.security.ssl.transport.enabled=false
+      - plugins.security.ssl.http.enabled=false
+      - plugins.security.allow_unsafe_democertificates=true
+      - plugins.security.allow_default_init_securityindex=true
+      - plugins.security.disabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
 
   flower:
     <<: *django
