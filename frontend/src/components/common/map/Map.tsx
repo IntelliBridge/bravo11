@@ -1,7 +1,11 @@
-import React, {useRef, useEffect, useState, useCallback} from 'react';
-import moment, {Moment} from 'moment';
-import {Timeline, TimelineOptions, DataItemCollectionType} from 'vis-timeline';
-import {throttle} from 'throttle-debounce';
+import React, { useRef, useEffect, useState, useCallback } from "react";
+import moment, { Moment } from "moment";
+import {
+  Timeline,
+  TimelineOptions,
+  DataItemCollectionType,
+} from "vis-timeline";
+import { throttle } from "throttle-debounce";
 import {
   Tabs,
   Tab,
@@ -14,23 +18,22 @@ import {
   H5,
   H6,
   Checkbox,
-} from '@blueprintjs/core';
-import {Cell, Column, Table} from '@blueprintjs/table';
-import {Tile3DLayer} from '@deck.gl/geo-layers/typed';
-import {MapboxOverlay} from '@deck.gl/mapbox/typed';
-import {CesiumIonLoader} from '@loaders.gl/3d-tiles';
-import Map, {MapRef} from 'react-map-gl';
-import maplibregl from 'maplibre-gl';
-import ReactHlsPlayer from 'react-hls-player';
+} from "@blueprintjs/core";
+import { Cell, Column, Table } from "@blueprintjs/table";
+import { Tile3DLayer } from "@deck.gl/geo-layers/typed";
+import { MapboxOverlay } from "@deck.gl/mapbox/typed";
+import { CesiumIonLoader } from "@loaders.gl/3d-tiles";
+import Map, { MapRef } from "react-map-gl";
+import maplibregl from "maplibre-gl";
 
-import {BaseLayer, DataLayer, Terrain} from '../../../types/map';
+import { BaseLayer, DataLayer, Terrain } from "../../../types/map";
 
-import 'normalize.css';
-import '@blueprintjs/core/lib/css/blueprint.css';
-import '@blueprintjs/icons/lib/css/blueprint-icons.css';
-import '@blueprintjs/table/lib/css/table.css';
-import 'vis-timeline/dist/vis-timeline-graph2d.min.css';
-import './Map.css';
+import "normalize.css";
+import "@blueprintjs/core/lib/css/blueprint.css";
+import "@blueprintjs/icons/lib/css/blueprint-icons.css";
+import "@blueprintjs/table/lib/css/table.css";
+import "vis-timeline/dist/vis-timeline-graph2d.min.css";
+import "./Map.css";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -48,7 +51,6 @@ function Cop(props: CopProps) {
   const hoverLayer = useRef<string | null>(null);
   const overlay = useRef<MapboxOverlay | null>(null);
   const playInterval = useRef<number | null>(null);
-  const videoPlayerRef = React.useRef<HTMLVideoElement | null>(null);
 
   const [feature, setFeature] = useState<any | null>(null);
   const [table, setTable] = useState<any | null>(null);
@@ -58,12 +60,12 @@ function Cop(props: CopProps) {
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(moment().toISOString());
   const [rate, setRate] = useState(1);
-  const [selectedTab, setSelectedTab] = useState('data');
+  const [selectedTab, setSelectedTab] = useState("data");
   const [modelLoaded, setModelLoaded] = useState(false);
   const [modalOpen, setModalOpen] = useState(true);
 
   const getGeojsonURL = (dataLayer: DataLayer, t: Moment) => {
-    let url = '';
+    let url = "";
     const bounds = map.current?.getBounds();
 
     if (bounds !== undefined) {
@@ -96,13 +98,13 @@ function Cop(props: CopProps) {
   };
 
   const loadLayer = async (dataLayer: DataLayer, t: Moment) => {
-    if (dataLayer.type === 'vector') {
+    if (dataLayer.type === "vector") {
       map.current
         ?.getMap()
         .getSource(dataLayer.name)
         //@ts-ignore
         .setTiles([getVectorURL(dataLayer, t)]);
-    } else if (dataLayer.type === 'geojson') {
+    } else if (dataLayer.type === "geojson") {
       const response = await fetch(getGeojsonURL(dataLayer, t));
       const features = await response.json();
 
@@ -126,29 +128,29 @@ function Cop(props: CopProps) {
           return;
         }
 
-        if (dataLayer.type === 'vector') {
+        if (dataLayer.type === "vector") {
           map.current?.getMap().addSource(dataLayer.name, {
-            type: 'vector',
+            type: "vector",
             tiles: [getVectorURL(dataLayer, currentTime.current)],
             minzoom: 0,
             maxzoom: 24,
-            promoteId: '_id',
+            promoteId: "_id",
           });
-        } else if (dataLayer.type === 'geojson') {
+        } else if (dataLayer.type === "geojson") {
           map.current?.getMap().addSource(dataLayer.name, {
-            type: 'geojson',
+            type: "geojson",
             data: getGeojsonURL(dataLayer, currentTime.current),
-            promoteId: '_id',
+            promoteId: "_id",
           });
         }
 
         map.current?.getMap().addLayer(dataLayer.layer);
 
-        if (dataLayer.type === 'vector') {
-          map.current?.on('mousemove', dataLayer.name, event => {
+        if (dataLayer.type === "vector") {
+          map.current?.on("mousemove", dataLayer.name, (event) => {
             if (map.current == null) return;
 
-            map.current.getCanvas().style.cursor = 'pointer';
+            map.current.getCanvas().style.cursor = "pointer";
 
             // Check whether features exist
             if (event.features === undefined || event.features.length === 0)
@@ -158,7 +160,7 @@ function Cop(props: CopProps) {
               map.current.removeFeatureState({
                 source: hoverLayer.current,
                 id: hover.current,
-                sourceLayer: 'hits',
+                sourceLayer: "hits",
               });
             }
 
@@ -172,35 +174,35 @@ function Cop(props: CopProps) {
                 {
                   source: hoverLayer.current,
                   id: hover.current,
-                  sourceLayer: 'hits',
+                  sourceLayer: "hits",
                 },
                 {
                   hover: true,
-                },
+                }
               );
             }
           });
 
-          map.current?.on('mouseleave', dataLayer.name, function () {
+          map.current?.on("mouseleave", dataLayer.name, function () {
             if (map.current == null) return;
 
-            map.current.getCanvas().style.cursor = '';
+            map.current.getCanvas().style.cursor = "";
 
             if (hover.current !== null && hoverLayer.current !== null) {
               map.current.setFeatureState(
                 {
                   source: hoverLayer.current,
                   id: hover.current,
-                  sourceLayer: 'hits',
+                  sourceLayer: "hits",
                 },
-                {hover: false},
+                { hover: false }
               );
             }
             hover.current = null;
           });
         }
 
-        map.current?.on('click', dataLayer.name, async event => {
+        map.current?.on("click", dataLayer.name, async (event) => {
           if (map.current == null) return;
 
           // Check whether features exist
@@ -210,7 +212,7 @@ function Cop(props: CopProps) {
           const f = event.features[0];
           if (f.properties !== null) {
             const response = await fetch(
-              `/api/info/${f.properties._index}/_doc/${f.properties._id}`,
+              `/api/info/${f.properties._index}/_doc/${f.properties._id}`
             );
             const feature = await response.json();
             setFeature(feature);
@@ -222,7 +224,7 @@ function Cop(props: CopProps) {
 
   const loadTable = async (country: string) => {
     const response = await fetch(
-      `/api/info/nato_readiness_092822/_search?q=${country}`,
+      `/api/info/nato_readiness_092822/_search?q=${country}`
     );
     const features = await response.json();
     setTable(features.hits.hits);
@@ -234,13 +236,13 @@ function Cop(props: CopProps) {
     }
 
     const token =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNWZlN2RkYS01YTdhLTRkN2UtOTZhNi1kNzA2YTY3MTVhYWIiLCJpZCI6MTA5NzI2LCJpYXQiOjE2NjQ1MTUyOTJ9.s_cMv49fe6kenOmRCoAeutULmJNPSrJTXZi-dQ3uB1Y';
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNWZlN2RkYS01YTdhLTRkN2UtOTZhNi1kNzA2YTY3MTVhYWIiLCJpZCI6MTA5NzI2LCJpYXQiOjE2NjQ1MTUyOTJ9.s_cMv49fe6kenOmRCoAeutULmJNPSrJTXZi-dQ3uB1Y";
     const tile3DLayer = new Tile3DLayer({
-      id: 'tile-3d-layer',
+      id: "tile-3d-layer",
       pointSize: 2,
-      data: 'https://assets.cesium.com/1338288/tileset.json',
+      data: "https://assets.cesium.com/1338288/tileset.json",
       loader: CesiumIonLoader,
-      loadOptions: {'cesium-ion': {accessToken: token}},
+      loadOptions: { "cesium-ion": { accessToken: token } },
     });
 
     overlay.current.setProps({
@@ -249,26 +251,26 @@ function Cop(props: CopProps) {
 
     map.current
       ?.getMap()
-      .flyTo({center: [31.295135035949748, 51.49451866836744], zoom: 18});
+      .flyTo({ center: [31.295135035949748, 51.49451866836744], zoom: 18 });
 
     setModelLoaded(true);
   };
 
   const removeModel = () => {
     if (overlay.current !== null) {
-      overlay.current.setProps({layers: []});
+      overlay.current.setProps({ layers: [] });
       setModelLoaded(false);
     }
   };
 
-  const throttleFunc = throttle(1000, t => {
+  const throttleFunc = throttle(1000, (t) => {
     currentTime.current = moment(t.time);
     setTime(t.time.toISOString());
 
     const currentLayers = map.current?.getMap().getStyle().layers;
-    currentLayers?.forEach(layer => {
+    currentLayers?.forEach((layer) => {
       const dataLayer = props.dataLayers.find(
-        (d: DataLayer) => d.name === layer.id,
+        (d: DataLayer) => d.name === layer.id
       );
 
       if (dataLayer) {
@@ -279,17 +281,17 @@ function Cop(props: CopProps) {
 
   const goLive = () => {
     const live = moment();
-    timeline.current?.setCustomTime(live.toDate(), 'cursor');
-    throttleFunc({time: live});
+    timeline.current?.setCustomTime(live.toDate(), "cursor");
+    throttleFunc({ time: live });
   };
 
   const playCustom = useCallback(() => {
     setPlaying(true);
     playInterval.current = window.setInterval(() => {
       if (currentTime.current !== null) {
-        const newTime = currentTime.current.add(100 * rate, 'milliseconds');
-        timeline.current?.setCustomTime(newTime.toDate(), 'cursor');
-        throttleFunc({time: newTime});
+        const newTime = currentTime.current.add(100 * rate, "milliseconds");
+        timeline.current?.setCustomTime(newTime.toDate(), "cursor");
+        throttleFunc({ time: newTime });
       }
     }, 100);
   }, [rate, throttleFunc]);
@@ -314,12 +316,12 @@ function Cop(props: CopProps) {
       timeline.current = new Timeline(
         timelineContainer.current,
         dataset,
-        options,
+        options
       );
 
       currentTime.current = moment();
-      timeline.current.addCustomTime(currentTime.current.toDate(), 'cursor');
-      timeline.current.on('timechange', t => {
+      timeline.current.addCustomTime(currentTime.current.toDate(), "cursor");
+      timeline.current.on("timechange", (t) => {
         pauseCustom();
         throttleFunc(t);
       });
@@ -333,36 +335,37 @@ function Cop(props: CopProps) {
 
   const baseLayerTab = (
     <>
-      <H5 style={{marginBottom: 20}}>Base Layers</H5>
+      <H5 style={{ marginBottom: 20 }}>Base Layers</H5>
       <RadioGroup
         selectedValue={baseLayer}
         onChange={(e: React.FormEvent<HTMLInputElement>) => {
           setBaseLayer(e.currentTarget.value);
           setBaseLoading(false);
-        }}>
+        }}
+      >
         {radioButtons}
       </RadioGroup>
-      <div style={{marginTop: 20}}>
+      <div style={{ marginTop: 20 }}>
         <MenuDivider />
       </div>
-      <H5 style={{marginBottom: 20, marginTop: 20}}>Terrain</H5>
+      <H5 style={{ marginBottom: 20, marginTop: 20 }}>Terrain</H5>
       <Checkbox
-        label={'Terrain'}
+        label={"Terrain"}
         defaultChecked={false}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
           if (map.current == null) return;
 
           if (e.target.checked) {
-            map.current.getMap().addSource('terrain', {
-              type: 'raster-dem',
+            map.current.getMap().addSource("terrain", {
+              type: "raster-dem",
               url: props.terrain.url,
             });
             map.current.getMap().setTerrain({
-              source: 'terrain',
+              source: "terrain",
             });
           } else {
             map.current.getMap().setTerrain();
-            map.current.getMap().removeSource('terrain');
+            map.current.getMap().removeSource("terrain");
           }
         }}
       />
@@ -370,14 +373,14 @@ function Cop(props: CopProps) {
   );
 
   const checkboxes: JSX.Element[] = [];
-  let previousGroup = '';
+  let previousGroup = "";
   props.dataLayers.forEach((l: DataLayer) => {
     if (l.group !== previousGroup) {
       previousGroup = l.group;
       checkboxes.push(
-        <H6 key={l.group} style={{marginTop: 20}}>
+        <H6 key={l.group} style={{ marginTop: 20 }}>
           {l.group}
-        </H6>,
+        </H6>
       );
     }
 
@@ -393,26 +396,26 @@ function Cop(props: CopProps) {
             setLayers(tmpLayers);
           } else {
             let tmpLayers = layers.slice(0);
-            tmpLayers = tmpLayers.filter(layer => layer !== l.name);
+            tmpLayers = tmpLayers.filter((layer) => layer !== l.name);
             setLayers(tmpLayers);
           }
         }}
-      />,
+      />
     );
   });
 
   const dataLayerTab = (
     <>
-      <H5 style={{marginBottom: 20}}>Data Layers</H5>
+      <H5 style={{ marginBottom: 20 }}>Data Layers</H5>
       {checkboxes}
     </>
   );
 
   const modelLayerTab = (
     <>
-      <H5 style={{marginBottom: 20}}>Model Layers</H5>
+      <H5 style={{ marginBottom: 20 }}>Model Layers</H5>
       <Checkbox
-        label={'Ukraine'}
+        label={"Ukraine"}
         checked={modelLoaded}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
           if (e.target.checked) {
@@ -427,42 +430,47 @@ function Cop(props: CopProps) {
 
   const chatTab = (
     <iframe
-      style={{width: '100%', height: 600, border: 'none'}}
+      style={{ width: "100%", height: 600, border: "none" }}
       src={`./chat/channel/general?layout=embedded`}
-      title="Chat"></iframe>
+      title="Chat"
+    ></iframe>
   );
 
   const timebar = (
     <div
       style={{
-        position: 'absolute',
-        width: '100%',
+        position: "absolute",
+        width: "100%",
         bottom: 0,
         padding: 20,
-        display: 'flex',
-      }}>
+        display: "flex",
+      }}
+    >
       <Card
         elevation={4}
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          width: '100%',
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
           padding: 0,
           maxWidth: 800,
-          margin: 'auto',
-        }}>
+          margin: "auto",
+        }}
+      >
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-          }}>
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
           <div
             style={{
-              display: 'flex',
+              display: "flex",
               flex: 1,
               marginLeft: 10,
-              alignItems: 'center',
-            }}>
+              alignItems: "center",
+            }}
+          >
             {playing ? (
               <Button
                 icon="pause"
@@ -482,32 +490,33 @@ function Cop(props: CopProps) {
                 setRate(1);
               }}
             />
-            <div style={{width: 150, marginLeft: 20}}>
+            <div style={{ width: 150, marginLeft: 20 }}>
               <Slider
                 min={1}
                 max={60}
                 stepSize={1}
                 labelRenderer={false}
-                onChange={e => {
+                onChange={(e) => {
                   pauseCustom();
                   setRate(e);
                 }}
                 value={rate}
               />
             </div>
-            <H5 style={{margin: 0, marginLeft: 20, textAlign: 'center'}}>
+            <H5 style={{ margin: 0, marginLeft: 20, textAlign: "center" }}>
               {rate}X
             </H5>
           </div>
           <div
             style={{
               flex: 1,
-              display: 'flex',
-              justifyContent: 'end',
-              alignItems: 'center',
+              display: "flex",
+              justifyContent: "end",
+              alignItems: "center",
               marginRight: 10,
-            }}>
-            <H5 style={{margin: 0, marginRight: 10, textAlign: 'center'}}>
+            }}
+          >
+            <H5 style={{ margin: 0, marginRight: 10, textAlign: "center" }}>
               {time}
             </H5>
             <Button icon="record" intent="danger" onClick={() => goLive()}>
@@ -525,37 +534,28 @@ function Cop(props: CopProps) {
     Object.entries(feature._source)
       .sort()
       .forEach(([key, value]) => {
-        if (typeof value == 'number' || typeof value == 'string') {
-          if (key === 'ISO_A3') {
+        if (typeof value == "number" || typeof value == "string") {
+          if (key === "ISO_A3") {
             properties.unshift(
-              <p key={key} style={{display: 'flex', alignItems: 'center'}}>
+              <p key={key} style={{ display: "flex", alignItems: "center" }}>
                 <strong>Units: </strong>
                 <Button
                   small
                   intent="primary"
-                  style={{marginLeft: 5}}
-                  onClick={() => loadTable(value as string)}>
+                  style={{ marginLeft: 5 }}
+                  onClick={() => loadTable(value as string)}
+                >
                   View
                 </Button>
-              </p>,
+              </p>
             );
-          } else if (key === 'uri') {
-            properties.push(
-              <ReactHlsPlayer
-                key={value}
-                playerRef={videoPlayerRef}
-                src={value as string}
-                autoPlay={true}
-                controls={false}
-                width="100%"
-                height="auto"
-              />,
-            );
+          } else if (key === "uri") {
+            properties.push(<span>hls player used to be here</span>);
           } else {
             properties.push(
-              <p key={key} style={{overflowWrap: 'break-word'}}>
+              <p key={key} style={{ overflowWrap: "break-word" }}>
                 <strong>{key}:</strong> {value}
-              </p>,
+              </p>
             );
           }
         }
@@ -570,35 +570,35 @@ function Cop(props: CopProps) {
 
     unitTable = (
       <Table numRows={table.length}>
-        <Column name="Unit" cellRenderer={i => cellRenderer('Unit', i)} />
-        <Column name="Service" cellRenderer={i => cellRenderer('Svc', i)} />
+        <Column name="Unit" cellRenderer={(i) => cellRenderer("Unit", i)} />
+        <Column name="Service" cellRenderer={(i) => cellRenderer("Svc", i)} />
         <Column
           name="Mission/Task"
-          cellRenderer={i => cellRenderer('Mission/Task', i)}
+          cellRenderer={(i) => cellRenderer("Mission/Task", i)}
         />
         <Column
           name="Start Training"
-          cellRenderer={i => cellRenderer('Start Training', i)}
+          cellRenderer={(i) => cellRenderer("Start Training", i)}
         />
         <Column
           name="End Training"
-          cellRenderer={i => cellRenderer('End Training', i)}
+          cellRenderer={(i) => cellRenderer("End Training", i)}
         />
         <Column
           name="Starting Ops Deploy"
-          cellRenderer={i => cellRenderer('Starting Ops Deploy', i)}
+          cellRenderer={(i) => cellRenderer("Starting Ops Deploy", i)}
         />
         <Column
           name="End Ops Deploy"
-          cellRenderer={i => cellRenderer('End Ops Deploy', i)}
+          cellRenderer={(i) => cellRenderer("End Ops Deploy", i)}
         />
         <Column
           name="End Recuperation"
-          cellRenderer={i => cellRenderer('End Recuperation', i)}
+          cellRenderer={(i) => cellRenderer("End Recuperation", i)}
         />
         <Column
           name="Total Personnel"
-          cellRenderer={i => cellRenderer('Total Personnel', i)}
+          cellRenderer={(i) => cellRenderer("Total Personnel", i)}
         />
       </Table>
     );
@@ -606,13 +606,14 @@ function Cop(props: CopProps) {
 
   return (
     <div
-      className={'bp4-dark'}
+      className={"bp4-dark"}
       style={{
-        height: '80vh',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-      }}>
+        height: "80vh",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+      }}
+    >
       <Map
         ref={map}
         // @ts-ignore
@@ -622,9 +623,9 @@ function Cop(props: CopProps) {
         onMoveEnd={() => {
           //reload geojson layers
           const currentLayers = map.current?.getMap().getStyle().layers;
-          currentLayers?.forEach(layer => {
+          currentLayers?.forEach((layer) => {
             const dataLayer = props.dataLayers.find(
-              (d: DataLayer) => d.name === layer.id && d.type === 'geojson',
+              (d: DataLayer) => d.name === layer.id && d.type === "geojson"
             );
 
             if (dataLayer) {
@@ -634,11 +635,11 @@ function Cop(props: CopProps) {
           });
         }}
         onLoad={() => {
-          map.current?.loadImage('./airplane.png', (error, image) => {
-            if (image !== undefined) {
-              map.current?.addImage('airplane', image, {});
-            }
-          });
+          // map.current?.loadImage("./airplane.png", (error, image) => {
+          //   if (image !== undefined) {
+          //     map.current?.addImage("airplane", image, {});
+          //   }
+          // });
 
           overlay.current = new MapboxOverlay({
             interleaved: true,
@@ -647,33 +648,36 @@ function Cop(props: CopProps) {
 
           map.current?.getMap().addControl(overlay.current);
 
-          map.current?.on('style.load', function () {
-            map.current?.loadImage('./airplane.png', (error, image) => {
+          map.current?.on("style.load", function () {
+            map.current?.loadImage("./airplane.png", (error, image) => {
               if (image !== undefined) {
-                map.current?.addImage('airplane', image, {});
+                map.current?.addImage("airplane", image, {});
               }
             });
 
             setBaseLoading(true);
           });
-        }}></Map>
+        }}
+      ></Map>
       {timebar}
       {table !== null ? (
         <Card
           elevation={4}
           style={{
-            position: 'absolute',
+            position: "absolute",
             margin: 20,
             right: 400,
-          }}>
+          }}
+        >
           <div
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
               marginBottom: 20,
-            }}>
-            <H5 style={{margin: 0}}>Units</H5>
+            }}
+          >
+            <H5 style={{ margin: 0 }}>Units</H5>
             <Button icon="cross" minimal onClick={() => setTable(null)} />
           </div>
           <p>{unitTable}</p>
@@ -684,20 +688,22 @@ function Cop(props: CopProps) {
           elevation={4}
           style={{
             width: 375,
-            position: 'absolute',
+            position: "absolute",
             margin: 20,
             right: 0,
             maxHeight: 600,
-            overflowY: 'auto',
-          }}>
+            overflowY: "auto",
+          }}
+        >
           <div
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
               marginBottom: 20,
-            }}>
-            <H5 style={{margin: 0}}>Feature</H5>
+            }}
+          >
+            <H5 style={{ margin: 0 }}>Feature</H5>
             <Button icon="cross" minimal onClick={() => setFeature(null)} />
           </div>
           {properties}
@@ -706,30 +712,33 @@ function Cop(props: CopProps) {
         <div
           style={{
             width: 375,
-            position: 'absolute',
+            position: "absolute",
             margin: 20,
             right: 0,
-          }}>
-          <Card elevation={4} style={{overflow: 'hidden'}}>
+          }}
+        >
+          <Card elevation={4} style={{ overflow: "hidden" }}>
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-              }}>
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
               <Tabs
                 selectedTabId={selectedTab}
-                onChange={tab => {
+                onChange={(tab) => {
                   setModalOpen(true);
                   setSelectedTab(tab as string);
-                }}>
+                }}
+              >
                 <Tab id="data" title="Data" />
                 <Tab id="base" title="Base" />
                 <Tab id="model" title="Model" />
                 <Tab id="chat" title="Chat" />
               </Tabs>
-              <div style={{flex: 1}} />
+              <div style={{ flex: 1 }} />
               <Button
-                icon={modalOpen ? 'minus' : 'plus'}
+                icon={modalOpen ? "minus" : "plus"}
                 large
                 minimal
                 onClick={() => setModalOpen(!modalOpen)}
@@ -739,10 +748,11 @@ function Cop(props: CopProps) {
               style={{
                 maxHeight: modalOpen ? 10000 : 0,
                 transition: modalOpen
-                  ? 'max-height 1s ease-in-out'
-                  : 'max-height 0.5s cubic-bezier(0, 1, 0, 1)',
-              }}>
-              <div style={{height: 20}} />
+                  ? "max-height 1s ease-in-out"
+                  : "max-height 0.5s cubic-bezier(0, 1, 0, 1)",
+              }}
+            >
+              <div style={{ height: 20 }} />
               {
                 {
                   data: dataLayerTab,
