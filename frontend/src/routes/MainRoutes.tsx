@@ -5,9 +5,9 @@ import MainLayout from 'components/common/layout/MainLayout';
 import Loadable from 'components/ui/Loadable';
 // import AuthGuard from 'utils/route-guard/AuthGuard';
 
-// dashboard routing
-const DashboardAnalytics = Loadable(lazy(() => import('components/views/dashboard/Analytics')));
-
+// // dashboard routing
+// const DashboardAnalytics = Loadable(lazy(() => import('components/views/dashboard/Analytics')));
+//
 // application routing
 const AppChat = Loadable(lazy(() => import('components/views/application/chat')));
 
@@ -34,7 +34,7 @@ const MainRoutes = {
         },
         {
             path: '',
-            element: <DashboardAnalytics />
+            element: <>Dashboard</>
         }
     ]
 };
