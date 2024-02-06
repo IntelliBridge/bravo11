@@ -1,0 +1,22 @@
+[
+    {
+      "name": "Satellite",
+      "url": "https://api.maptiler.com/maps/hybrid/style.json?key=7KTnfy7HtKiCSM35l01E"
+    },
+    {
+      "name": "Dark",
+      "url": "https://api.maptiler.com/maps/darkmatter/style.json?key=7KTnfy7HtKiCSM35l01E"
+    },
+    {
+      "name": "Streets",
+      "url": "https://api.maptiler.com/maps/streets/style.json?key=7KTnfy7HtKiCSM35l01E"
+    },
+    {
+      "name": "Topo",
+      "url": "https://api.maptiler.com/maps/topo/style.json?key=7KTnfy7HtKiCSM35l01E"
+    },
+    {
+      "name": "Basic",
+      "url": "https://api.maptiler.com/maps/basic/style.json?key=7KTnfy7HtKiCSM35l01E"
+    }
+  ]

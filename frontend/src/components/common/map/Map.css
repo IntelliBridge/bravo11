@@ -1,0 +1,31 @@
+.map-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .map {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .maplibregl-control-container {
+    display: none;
+  }
+  
+  .maplibregl-canvas-container {
+    display: flex;
+  }
+  
+  .vis-text {
+    color: white !important;
+  }
+  
+  .vis-custom-time {
+    background: #6e94ff;
+    width: 5px;
+  }
+  
+  .vis-timeline {
+    border: none !important;
+  }
