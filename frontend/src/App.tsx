@@ -1,22 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 // routing
-import Routes from 'routes';
+import Routes from "routes";
 
 // project imports
-import Locales from 'components/ui/Locales';
-import NavigationScroll from 'components/common/layout/NavigationScroll';
-import RTLLayout from 'components/ui/RTLLayout';
-import Snackbar from 'components/ui/extended/Snackbar';
-import Loader from 'components/ui/Loader';
-import Notistack from 'components/ui/third-party/Notistack';
+import Locales from "components/ui/Locales";
+import NavigationScroll from "components/common/layout/NavigationScroll";
+import Snackbar from "components/ui/extended/Snackbar";
+import Loader from "components/ui/Loader";
+import Notistack from "components/ui/third-party/Notistack";
 
-import ThemeCustomization from 'themes';
-import { dispatch } from 'store/slices/legacy';
-import { getMenu } from 'store/slices/legacy/menu';
+import ThemeCustomization from "themes";
+import { dispatch } from "store/slices/legacy";
+import { getMenu } from "store/slices/legacy/menu";
 
 // auth provider
-import { JWTProvider as AuthProvider } from 'contexts/JWTContext';
+import { JWTProvider as AuthProvider } from "contexts/JWTContext";
 // import { FirebaseProvider as AuthProvider } from 'contexts/FirebaseContext';
 // import { AWSCognitoProvider as AuthProvider } from 'contexts/AWSCognitoContext';
 // import { Auth0Provider as AuthProvider } from 'contexts/Auth0Context';
@@ -24,34 +23,32 @@ import { JWTProvider as AuthProvider } from 'contexts/JWTContext';
 // ==============================|| APP ||============================== //
 
 const App = () => {
-    const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
-    useEffect(() => {
-        dispatch(getMenu()).then(() => {
-            setLoading(true);
-        });
-    }, []);
+  useEffect(() => {
+    dispatch(getMenu()).then(() => {
+      setLoading(true);
+    });
+  }, []);
 
-    if (!loading) return <Loader />;
+  if (!loading) return <Loader />;
 
-    return (
-        <ThemeCustomization>
-            <RTLLayout>
-                <Locales>
-                    <NavigationScroll>
-                        <AuthProvider>
-                            <>
-                                <Notistack>
-                                    <Routes />
-                                    <Snackbar />
-                                </Notistack>
-                            </>
-                        </AuthProvider>
-                    </NavigationScroll>
-                </Locales>
-            </RTLLayout>
-        </ThemeCustomization>
-    );
+  return (
+    <ThemeCustomization>
+      <Locales>
+        <NavigationScroll>
+          <AuthProvider>
+            <>
+              <Notistack>
+                <Routes />
+                <Snackbar />
+              </Notistack>
+            </>
+          </AuthProvider>
+        </NavigationScroll>
+      </Locales>
+    </ThemeCustomization>
+  );
 };
 
 export default App;
