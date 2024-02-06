@@ -4,13 +4,15 @@ import { FormattedMessage } from 'react-intl';
 import { NavItemType } from 'types';
 
 // assets
-import { IconApps, IconMap, IconMessages } from '@tabler/icons';
+import { IconApps, IconMap, IconMessages, IconChartBar, IconFileUpload } from '@tabler/icons';
 
 // constant
 const icons = {
     IconApps,
     IconMessages,
-    IconMap
+    IconMap,
+    IconChartBar,
+    IconFileUpload
 };
 
 // ==============================|| APPLICATION MENU ITEMS ||============================== //
@@ -22,18 +24,35 @@ const application: NavItemType = {
     type: 'group',
     children: [
         {
-            id: 'chat',
-            title: <FormattedMessage id="chat" />,
-            type: 'item',
-            icon: icons.IconMessages,
-            url: '/chat'
-        },
-        {
             id: 'map',
-            title: <FormattedMessage id="map" />,
+            title: <FormattedMessage id="Map" />,
             type: 'item',
             icon: icons.IconMap,
             url: '/map'
+        },
+        {
+            id: 'chat',
+            title: <FormattedMessage id="Chat" />,
+            type: 'item',
+            icon: icons.IconMessages,
+            url: '/chat',
+            disabled: true
+        },
+        {
+            id: 'graph',
+            title: <FormattedMessage id="Graph" />,
+            type: 'item',
+            icon: icons.IconChartBar,
+            url: '/graph',
+            disabled: true
+        },
+        {
+            id: 'graph',
+            title: <FormattedMessage id="doc-upload" />,
+            type: 'item',
+            icon: icons.IconFileUpload,
+            url: '/doc-upload',
+            disabled: true
         }
     ]
 };
