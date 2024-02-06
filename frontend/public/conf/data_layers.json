@@ -1,0 +1,247 @@
+[
+    {
+      "name": "GDELT",
+      "group": "OSINT",
+      "type": "vector",
+      "timeWindow": 2592000000,
+      "timeField": "LASTUPDATED",
+      "locationField": "Actor2Location",
+      "url": "http://localhost/api/tiles/gdelt_exports/_mvt/Actor2Location/{z}/{x}/{y}",
+      "layer": {
+        "id": "GDELT",
+        "type": "circle",
+        "source": "GDELT",
+        "source-layer": "hits",
+        "paint": {
+          "circle-stroke-color": "#000",
+          "circle-stroke-width": 3,
+          "circle-color": "#0096FF",
+          "circle-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            1,
+            0.5
+          ],
+          "circle-radius": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            10,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "name": "ACLED",
+      "group": "OSINT",
+      "type": "vector",
+      "timeWindow": 2592000000,
+      "timeField": "LASTUPDATED",
+      "locationField": "Location",
+      "url": "http://localhost/api/tiles/acled/_mvt/Location/{z}/{x}/{y}",
+      "layer": {
+        "id": "ACLED",
+        "type": "circle",
+        "source": "ACLED",
+        "source-layer": "hits",
+        "paint": {
+          "circle-stroke-color": "#000",
+          "circle-stroke-width": 3,
+          "circle-color": "#880808",
+          "circle-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            1,
+            0.5
+          ],
+          "circle-radius": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            10,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "name": "Infrastructure",
+      "group": "OSINT",
+      "type": "vector",
+      "timeWindow": 2592000000,
+      "timeField": "",
+      "locationField": "location",
+      "url": "http://localhost/api/tiles/nato_infrastructure_logistics_092622/_mvt/location/{z}/{x}/{y}",
+      "layer": {
+        "id": "Infrastructure",
+        "type": "circle",
+        "source": "Infrastructure",
+        "source-layer": "hits",
+        "paint": {
+          "circle-stroke-color": "#000",
+          "circle-stroke-width": 3,
+          "circle-color": "#00FF00",
+          "circle-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            1,
+            0.5
+          ],
+          "circle-radius": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            10,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "name": "Social",
+      "group": "OSINT",
+      "type": "vector",
+      "timeWindow": 2592000000,
+      "timeField": "",
+      "locationField": "location",
+      "url": "http://localhost/api/tiles/nato_osint_crawl_092922/_mvt/location/{z}/{x}/{y}",
+      "layer": {
+        "id": "Social",
+        "type": "circle",
+        "source": "Social",
+        "source-layer": "hits",
+        "paint": {
+          "circle-stroke-color": "#000",
+          "circle-stroke-width": 3,
+          "circle-color": "#9F2B68",
+          "circle-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            1,
+            0.5
+          ],
+          "circle-radius": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            10,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "name": "Country Availability",
+      "group": "HUMINT",
+      "type": "vector",
+      "timeWindow": 2592000000,
+      "timeField": "",
+      "locationField": "location",
+      "url": "http://localhost/api/tiles/nato_red_blue_avail_092322/_mvt/Geo_point/{z}/{x}/{y}",
+      "layer": {
+        "id": "Country Availability",
+        "type": "circle",
+        "source": "Country Availability",
+        "source-layer": "hits",
+        "paint": {
+          "circle-stroke-color": "#000",
+          "circle-stroke-width": 3,
+          "circle-color": "#FFFF00",
+          "circle-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            1,
+            0.5
+          ],
+          "circle-radius": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            10,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "name": "NATO Readiness",
+      "group": "HUMINT",
+      "type": "vector",
+      "timeWindow": 2592000000,
+      "timeField": "Start Training",
+      "locationField": "Geo_point",
+      "url": "http://localhost/api/tiles/nato_readiness_092322/_mvt/Geo_point/{z}/{x}/{y}",
+      "layer": {
+        "id": "NATO Readiness",
+        "type": "circle",
+        "source": "NATO Readiness",
+        "source-layer": "hits",
+        "paint": {
+          "circle-stroke-color": "#000",
+          "circle-stroke-width": 3,
+          "circle-color": "#9F2B68",
+          "circle-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            1,
+            0.5
+          ],
+          "circle-radius": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            10,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "name": "Cameras",
+      "group": "SIGINT",
+      "type": "vector",
+      "timeWindow": 2592000000,
+      "timeField": "",
+      "locationField": "location",
+      "url": "http://localhost/api/tiles/cameras/_mvt/Location/{z}/{x}/{y}",
+      "layer": {
+        "id": "Cameras",
+        "type": "circle",
+        "source": "Cameras",
+        "source-layer": "hits",
+        "paint": {
+          "circle-stroke-color": "#000",
+          "circle-stroke-width": 3,
+          "circle-color": "#ADD8E6",
+          "circle-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            1,
+            0.5
+          ],
+          "circle-radius": [
+            "case",
+            ["boolean", ["feature-state", "hover"], false],
+            10,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "name": "Military ADSB",
+      "group": "SIGINT",
+      "type": "geojson",
+      "timeWindow": 300000,
+      "timeField": "LASTUPDATED",
+      "locationField": "Location",
+      "url": "http://localhost/api/geojson/adsb",
+      "layer": {
+        "id": "Military ADSB",
+        "type": "symbol",
+        "source": "Military ADSB",
+        "layout": {
+          "icon-image": "airplane",
+          "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.1, 15, 0.25],
+          "icon-rotate": ["get", "track"],
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        }
+      }
+    }
+  ]
