@@ -1,2 +1,4 @@
-target/
 
+# Intellij IDE
+.idea
+target/
