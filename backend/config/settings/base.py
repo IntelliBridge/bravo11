@@ -83,7 +83,8 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "bravo11.users",
+    "apps.users",
+    "apps.prompt",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -185,7 +186,7 @@ TEMPLATES = [
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
-                "bravo11.users.context_processors.allauth_settings",
+                "apps.users.context_processors.allauth_settings",
             ],
         },
     }
@@ -305,13 +306,13 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 # https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_ADAPTER = "bravo11.users.adapters.AccountAdapter"
+ACCOUNT_ADAPTER = "apps.users.adapters.AccountAdapter"
 # https://docs.allauth.org/en/latest/account/forms.html
-ACCOUNT_FORMS = {"signup": "bravo11.users.forms.UserSignupForm"}
+ACCOUNT_FORMS = {"signup": "apps.users.forms.UserSignupForm"}
 # https://docs.allauth.org/en/latest/socialaccount/configuration.html
-SOCIALACCOUNT_ADAPTER = "bravo11.users.adapters.SocialAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "apps.users.adapters.SocialAccountAdapter"
 # https://docs.allauth.org/en/latest/socialaccount/configuration.html
-SOCIALACCOUNT_FORMS = {"signup": "bravo11.users.forms.UserSocialSignupForm"}
+SOCIALACCOUNT_FORMS = {"signup": "apps.users.forms.UserSocialSignupForm"}
 
 # django-rest-framework
 # -------------------------------------------------------------------------------
@@ -321,7 +322,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
     ),
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
@@ -338,3 +339,6 @@ SPECTACULAR_SETTINGS = {
 }
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+AWS_ACCESS_KEY = env("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = env("AWS_SECRET_KEY")

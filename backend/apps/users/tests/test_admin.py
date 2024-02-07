@@ -6,7 +6,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 
-from bravo11.users.models import User
+from apps.users.models import User
 
 
 class TestUserAdmin:
@@ -46,7 +46,7 @@ class TestUserAdmin:
     def force_allauth(self, settings):
         settings.DJANGO_ADMIN_FORCE_ALLAUTH = True
         # Reload the admin module to apply the setting change
-        import bravo11.users.admin as users_admin  # pylint: disable=import-outside-toplevel
+        import apps.users.admin as users_admin  # pylint: disable=import-outside-toplevel
 
         try:
             reload(users_admin)
