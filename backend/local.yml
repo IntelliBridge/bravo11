@@ -15,7 +15,6 @@ services:
     depends_on:
       - postgres
       - redis
-      - opensearch
     volumes:
       - .:/app:z
     env_file:
@@ -37,76 +36,6 @@ services:
     env_file:
       - ./.envs/.local/.postgres
 
-  docs:
-    image: bravo11_local_docs
-    container_name: bravo11_local_docs
-    build:
-      context: .
-      dockerfile: ./compose/local/docs/Dockerfile
-    env_file:
-      - ./.envs/.local/.django
-    volumes:
-      - ./docs:/docs:z
-      - ./config:/app/config:z
-      - ./bravo11:/app/bravo11:z
-    ports:
-      - '9000:9000'
-    command: /start-docs
-
   redis:
     image: docker.io/redis:6
     container_name: bravo11_local_redis
-
-  celeryworker:
-    <<: *django
-    image: bravo11_local_celeryworker
-    container_name: bravo11_local_celeryworker
-    depends_on:
-      - redis
-      - postgres
-    ports: []
-    command: /start-celeryworker
-
-  celerybeat:
-    <<: *django
-    image: bravo11_local_celerybeat
-    container_name: bravo11_local_celerybeat
-    depends_on:
-      - redis
-      - postgres
-    ports: []
-    command: /start-celerybeat
-
-  opensearch:
-    image: opensearchproject/opensearch:latest
-    container_name: opensearch
-    environment:
-      - discovery.type=single-node
-      - cluster.name=opensearch-cluster
-      - bootstrap.memory_lock=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-      - plugins.security.ssl.transport.enabled=false
-      - plugins.security.ssl.http.enabled=false
-      - plugins.security.allow_unsafe_democertificates=true
-      - plugins.security.allow_default_init_securityindex=true
-      - plugins.security.disabled=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    volumes:
-      - opensearch-data:/usr/share/opensearch/data
-    ports:
-      - "9200:9200"
-      - "9600:9600"
-
-  flower:
-    <<: *django
-    image: bravo11_local_flower
-    container_name: bravo11_local_flower
-    ports:
-      - '5555:5555'
-    command: /start-flower
