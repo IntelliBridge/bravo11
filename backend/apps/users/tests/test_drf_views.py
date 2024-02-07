@@ -1,8 +1,8 @@
 import pytest
 from rest_framework.test import APIRequestFactory
 
-from bravo11.users.api.views import UserViewSet
-from bravo11.users.models import User
+from apps.users.api.views import UserViewSet
+from apps.users.models import User
 
 
 class TestUserViewSet:
