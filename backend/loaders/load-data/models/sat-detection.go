@@ -84,8 +84,10 @@ func (d Detection) ToDocument() (string, DetectionDocument) {
 func ToCoordinates(polygon []DetectionPolygonVertex) [][2]float64 {
   res := make([][2]float64, len(polygon))
   for ix, v := range polygon {
-    res[ix] = [2]float64 { v.Lat, v.Lon }
+    // NOTE: GeoJson expects coordinates in Longitude, Latitude order!
+    res[ix] = [2]float64 { v.Lon, v.Lat }
   }
+  // NOTE: GeoJson requires polygons to be "closed" meaning the first and last vertices must be identical (WHY?!)
   if !VertexEqual(res[0], res[len(res) - 1]) {
     res = append(res, res[0])
   }
