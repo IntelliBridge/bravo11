@@ -23,7 +23,7 @@ import { Cell, Column, Table } from "@blueprintjs/table";
 import { Tile3DLayer } from "@deck.gl/geo-layers/typed";
 import { MapboxOverlay } from "@deck.gl/mapbox/typed";
 import { CesiumIonLoader } from "@loaders.gl/3d-tiles";
-import Map, { MapRef } from "react-map-gl";
+import Map, { MapRef, Marker } from "react-map-gl";
 import maplibregl from "maplibre-gl";
 
 import { BaseLayer, DataLayer, Terrain } from "../../../types/map";
@@ -34,11 +34,13 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
+import { Ship } from "types/ship";
 
 interface CopProps {
   baseLayers: BaseLayer[];
   dataLayers: DataLayer[];
   terrain: Terrain;
+  shipData: Ship[]
 }
 
 function Cop(props: CopProps) {
@@ -658,7 +660,16 @@ function Cop(props: CopProps) {
             setBaseLoading(true);
           });
         }}
-      ></Map>
+      >
+        {props.shipData.map(ship => (
+            <Marker
+                key={ship.shipName}
+                longitude={ship.longitude}
+                latitude={ship.latitude}
+            />
+        ))}
+
+      </Map>
       {timebar}
       {table !== null ? (
         <Card
