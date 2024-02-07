@@ -1,10 +1,12 @@
 package commands
 
 import (
-	"context"
+  "context"
+  "crypto/tls"
   "encoding/csv"
   "io"
   "log/slog"
+  "net/http"
   "os"
   "strconv"
   "strings"
@@ -63,10 +65,12 @@ var LoadSatDetectionsCmd = &cobra.Command{
     osClient, err := opensearchapi.NewClient(
       opensearchapi.Config{
          Client: opensearch.Config{
-           //Transport: &http.Transport{
-           //  TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-           //},
-           Addresses: []string{"http://192.168.45.74:9200"},
+           Transport: &http.Transport{
+            TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+           },
+           Addresses: []string{
+             util.GetEnv("OPENSEARCH_URL", "http://localhost:9200"),
+           },
            Username:  "admin", // For testing only. Don't store credentials in code.
            Password:  "admin",
          },
@@ -176,11 +180,11 @@ var LoadSatDetectionsCmd = &cobra.Command{
 
       _, err = osClient.Index(
         ctx,
-	      opensearchapi.IndexReq{
-	        Index: indexName,
-	        DocumentID: id,
+        opensearchapi.IndexReq{
+          Index: indexName,
+          DocumentID: id,
           Body: opensearchutil.NewJSONReader(&document),
-	    })
+      })
       if err != nil {
         slog.Error("Error indexing Detection: " + err.Error())
       }
