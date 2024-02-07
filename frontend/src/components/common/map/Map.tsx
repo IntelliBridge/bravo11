@@ -31,6 +31,7 @@ import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
 import { AnySourceData } from "mapbox-gl";
+import Chat from "components/ui/cards/Chat";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -40,31 +41,32 @@ interface CopProps {
 
 const DATA_POINTS = 100;
 const INITIAL_LAT = 14.628;
-const INITIAL_LONG = 115.834
+const INITIAL_LONG = 115.834;
 
-function randomIntFromInterval(min: number, max: number) { // min and max included
-  return Math.floor(Math.random() * (max - min + 1) + min)
+function randomIntFromInterval(min: number, max: number) {
+  // min and max included
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
 const generateCoordinates = () => {
   var latitude = INITIAL_LAT;
   var longitude = INITIAL_LONG;
   var coords = [];
   for (var i = 0; i < DATA_POINTS; i++) {
-    var latDiff = .01 * randomIntFromInterval(-5, 25);
-    var longDiff = .01 * randomIntFromInterval(-5, 25);
+    var latDiff = 0.01 * randomIntFromInterval(-5, 25);
+    var longDiff = 0.01 * randomIntFromInterval(-5, 25);
     latitude = latitude + latDiff;
     longitude = longitude + longDiff;
-    coords.push([longitude, latitude])
+    coords.push([longitude, latitude]);
   }
   return coords;
-}
+};
 
 const generateCI = (lat: number, long: number) => {
   var v1: [number, number] = [long, lat];
   var v2: [number, number] = [long + 15, lat];
   var v3: [number, number] = [long, lat + 15];
   return [v1, v2, v3, v1];
-}
+};
 
 var shipCoords = generateCoordinates();
 var planeCoords = generateCoordinates();
@@ -72,145 +74,145 @@ var shipCiCone = generateCI(shipCoords.pop()![1], shipCoords.pop()![0]);
 var planeCiCone = generateCI(planeCoords.pop()![1], planeCoords.pop()![0]);
 
 const shipLayer: DataLayer = {
-  "name": "Ships",
-  "group": "OSINT",
-  "type": "geojson",
-  "timeWindow": 2592000000,
-  "timeField": "",
-  "locationField": "location",
-  "url": "api endpoint for fetching plane data here",
-  "layer": {
-    "id": "shipRoute",
-    "type": "line",
-    "source": "shipRoute",
-    "layout": {
+  name: "Ships",
+  group: "OSINT",
+  type: "geojson",
+  timeWindow: 2592000000,
+  timeField: "",
+  locationField: "location",
+  url: "api endpoint for fetching plane data here",
+  layer: {
+    id: "shipRoute",
+    type: "line",
+    source: "shipRoute",
+    layout: {
       "line-join": "round",
-      "line-cap": "round"
+      "line-cap": "round",
     },
-    "paint": {
+    paint: {
       "line-color": "#66ff00",
-      "line-width": 4
-    }
-  }
+      "line-width": 4,
+    },
+  },
 };
 
 const shipCiLayer: DataLayer = {
-  "name": "Ship Ci Layer",
-  "group": "OSINT",
-  "type": "geojson",
-  "timeWindow": 2592000000,
-  "timeField": "",
-  "locationField": "location",
-  "url": "api endpoint for fetching plane ci verts here",
-  "layer": {
-    'id': 'shipCi',
-    'type': 'fill',
-    'source': 'shipRoute',
-    'paint': {
-      'fill-color': '#66ff00',
-      'fill-opacity': 0.4
+  name: "Ship Ci Layer",
+  group: "OSINT",
+  type: "geojson",
+  timeWindow: 2592000000,
+  timeField: "",
+  locationField: "location",
+  url: "api endpoint for fetching plane ci verts here",
+  layer: {
+    id: "shipCi",
+    type: "fill",
+    source: "shipRoute",
+    paint: {
+      "fill-color": "#66ff00",
+      "fill-opacity": 0.4,
     },
-    'filter': ['==', '$type', 'Polygon']
-  }
+    filter: ["==", "$type", "Polygon"],
+  },
 };
 
 const planeLayer: DataLayer = {
-  "name": "Planes",
-  "group": "OSINT",
-  "type": "geojson",
-  "timeWindow": 2592000000,
-  "timeField": "",
-  "locationField": "location",
-  "url": "api endpoint for fetching plane data here",
-  "layer": {
-    'id': 'planeRoute',
-    'type': 'line',
-    'source': 'planeRoute',
-    'layout': {
-      'line-join': 'round',
-      'line-cap': 'round'
+  name: "Planes",
+  group: "OSINT",
+  type: "geojson",
+  timeWindow: 2592000000,
+  timeField: "",
+  locationField: "location",
+  url: "api endpoint for fetching plane data here",
+  layer: {
+    id: "planeRoute",
+    type: "line",
+    source: "planeRoute",
+    layout: {
+      "line-join": "round",
+      "line-cap": "round",
     },
-    'paint': {
-      'line-color': '#FF007F',
-      'line-width': 4
+    paint: {
+      "line-color": "#FF007F",
+      "line-width": 4,
     },
-    'filter': ['==', '$type', 'LineString']
-  }
+    filter: ["==", "$type", "LineString"],
+  },
 };
 
 const planeCiLayer: DataLayer = {
-  "name": "Plane Ci Layer",
-  "group": "OSINT",
-  "type": "geojson",
-  "timeWindow": 2592000000,
-  "timeField": "",
-  "locationField": "location",
-  "url": "api endpoint for fetching plane ci verts here",
-  "layer": {
-    'id': 'planeCi',
-    'type': 'fill',
-    'source': 'planeRoute',
-    'paint': {
-      'fill-color': '#FF007F',
-      'fill-opacity': 0.4
+  name: "Plane Ci Layer",
+  group: "OSINT",
+  type: "geojson",
+  timeWindow: 2592000000,
+  timeField: "",
+  locationField: "location",
+  url: "api endpoint for fetching plane ci verts here",
+  layer: {
+    id: "planeCi",
+    type: "fill",
+    source: "planeRoute",
+    paint: {
+      "fill-color": "#FF007F",
+      "fill-opacity": 0.4,
     },
-    'filter': ['==', '$type', 'Polygon']
-  }
+    filter: ["==", "$type", "Polygon"],
+  },
 };
 
 const shipSourceData: AnySourceData = {
-  'type': 'geojson',
-  'data': {
-    'type': 'FeatureCollection',
-    'features': [
+  type: "geojson",
+  data: {
+    type: "FeatureCollection",
+    features: [
       {
-        'type': 'Feature',
-        'properties': {},
-        'geometry': {
-          'type': 'LineString',
-          'coordinates': shipCoords
-        }
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: shipCoords,
+        },
       },
       {
-        'type': 'Feature',
-        'properties': {},
-        'geometry': {
-          'type': 'Polygon',
-          "coordinates": [shipCiCone]
-        }
-      }
-    ]
-  }
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "Polygon",
+          coordinates: [shipCiCone],
+        },
+      },
+    ],
+  },
 };
 
 const planeSourceData: AnySourceData = {
-  'type': 'geojson',
-  'data': {
-    'type': 'FeatureCollection',
-    'features': [
+  type: "geojson",
+  data: {
+    type: "FeatureCollection",
+    features: [
       {
-        'type': 'Feature',
-        'properties': {},
-        'geometry': {
-          'type': 'LineString',
-          'coordinates': planeCoords
-        }
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: planeCoords,
+        },
       },
       {
-        'type': 'Feature',
-        'properties': {},
-        'geometry': {
-          'type': 'Polygon',
-          "coordinates": [planeCiCone]
-        }
-      }
-    ]
-  }
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "Polygon",
+          coordinates: [planeCiCone],
+        },
+      },
+    ],
+  },
 };
 
 interface SourceDataLookup {
-  key: string,
-  data: AnySourceData
+  key: string;
+  data: AnySourceData;
 }
 
 const dataLayers: DataLayer[] = [shipLayer, planeLayer];
@@ -218,13 +220,13 @@ const ciConeLayers: DataLayer[] = [shipCiLayer, planeCiLayer];
 const dataSources: SourceDataLookup[] = [
   {
     key: shipLayer.layer.id,
-    data: shipSourceData
+    data: shipSourceData,
   },
   {
     key: planeLayer.layer.id,
-    data: planeSourceData
+    data: planeSourceData,
   },
-]
+];
 
 function Cop(props: CopProps) {
   const timelineContainer = useRef(null);
@@ -256,8 +258,9 @@ function Cop(props: CopProps) {
 
   useEffect(() => {
     dataLayers.forEach((layer: DataLayer) => {
-      const layerOnMap = map.current?.getMap().getLayer(layer.layer.id) !== undefined;
-      var ciLayer = ciConeLayers.find(s => s.layer.source === layer.layer.id);
+      const layerOnMap =
+        map.current?.getMap().getLayer(layer.layer.id) !== undefined;
+      var ciLayer = ciConeLayers.find((s) => s.layer.source === layer.layer.id);
       if (layerOnMap && !layers.includes(layer.layer.id)) {
         map.current?.getMap().removeLayer(layer.layer.id);
         if (ciLayer) {
@@ -266,8 +269,12 @@ function Cop(props: CopProps) {
         map.current?.getMap().removeSource(layer.layer.id);
       }
 
-      var data = dataSources.find(s => s.key === layer.layer.id)
-      if (!layerOnMap && layers.includes(layer.layer.id) && data !== undefined ) {
+      var data = dataSources.find((s) => s.key === layer.layer.id);
+      if (
+        !layerOnMap &&
+        layers.includes(layer.layer.id) &&
+        data !== undefined
+      ) {
         map.current?.getMap().addSource(layer.layer.id, data.data);
         map.current?.getMap().addLayer(layer.layer);
         // get ci data
@@ -276,11 +283,11 @@ function Cop(props: CopProps) {
         }
 
         map.current
-            ?.getMap()
-            .flyTo({ center: [INITIAL_LONG + 5, INITIAL_LAT + 5], zoom: 4 });
+          ?.getMap()
+          .flyTo({ center: [INITIAL_LONG + 5, INITIAL_LAT + 5], zoom: 4 });
       }
-    })
-  }, [layers, baseLoading])
+    });
+  }, [layers, baseLoading]);
 
   // useEffect(() => {
   //   props.dataLayers.forEach((dataLayer: DataLayer) => {
@@ -390,7 +397,6 @@ function Cop(props: CopProps) {
   //     }
   //   });
   // }, [layers, baseLoading, props.dataLayers]);
-
 
   const throttleFunc = throttle(1000, (t) => {
     currentTime.current = moment(t.time);
@@ -538,14 +544,14 @@ function Cop(props: CopProps) {
     </>
   );
 
-
-  const chatTab = (
-    <iframe
-      style={{ width: "100%", height: 600, border: "none" }}
-      src={`./chat/channel/general?layout=embedded`}
-      title="Chat"
-    ></iframe>
+  const filterLayerTab = (
+    <>
+      <H5 style={{ marginBottom: 20 }}>Filter</H5>
+      <span>something here</span>
+    </>
   );
+
+  const chatTab = <Chat />;
 
   const timebar = (
     <div
@@ -644,7 +650,7 @@ function Cop(props: CopProps) {
     <div
       className={"bp4-dark"}
       style={{
-        height: "80vh",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
         position: "relative",
@@ -659,56 +665,57 @@ function Cop(props: CopProps) {
         onLoad={() => {
           setBaseLoading(true);
         }}
-      >
-      </Map>
+      ></Map>
       {timebar}
       <div
-          style={{
-            width: 375,
-            position: "absolute",
-            margin: 20,
-            right: 0,
-          }}
+        style={{
+          width: 375,
+          position: "absolute",
+          margin: 20,
+          right: 0,
+        }}
       >
         <Card elevation={4} style={{ overflow: "hidden" }}>
           <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-              }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
           >
             <Tabs
-                selectedTabId={selectedTab}
-                onChange={(tab) => {
-                  setModalOpen(true);
-                  setSelectedTab(tab as string);
-                }}
+              selectedTabId={selectedTab}
+              onChange={(tab) => {
+                setModalOpen(true);
+                setSelectedTab(tab as string);
+              }}
             >
               <Tab id="data" title="Data" />
               <Tab id="base" title="Base" />
+              <Tab id="filter" title="Filter" />
               <Tab id="chat" title="Chat" />
             </Tabs>
             <div style={{ flex: 1 }} />
             <Button
-                icon={modalOpen ? "minus" : "plus"}
-                large
-                minimal
-                onClick={() => setModalOpen(!modalOpen)}
+              icon={modalOpen ? "minus" : "plus"}
+              large
+              minimal
+              onClick={() => setModalOpen(!modalOpen)}
             />
           </div>
           <div
-              style={{
-                maxHeight: modalOpen ? 10000 : 0,
-                transition: modalOpen
-                    ? "max-height 1s ease-in-out"
-                    : "max-height 0.5s cubic-bezier(0, 1, 0, 1)",
-              }}
+            style={{
+              maxHeight: modalOpen ? 10000 : 0,
+              transition: modalOpen
+                ? "max-height 1s ease-in-out"
+                : "max-height 0.5s cubic-bezier(0, 1, 0, 1)",
+            }}
           >
             <div style={{ height: 20 }} />
             {
               {
                 data: dataLayerTab,
                 base: baseLayerTab,
+                filter: filterLayerTab,
                 chat: chatTab,
               }[selectedTab]
             }
