@@ -3,7 +3,7 @@ from django.db.models import CharField, EmailField
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from bravo11.users.managers import UserManager
+from apps.users.managers import UserManager
 
 
 class User(AbstractUser):
