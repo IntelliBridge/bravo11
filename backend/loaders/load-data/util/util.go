@@ -5,6 +5,7 @@ import (
 "encoding/json"
 "errors"
 "load-data/models"
+"os"
 "strings"
 )
 
@@ -50,4 +51,13 @@ func ParseArray[T any](jsonString string) ([]T, error) {
 
 func ParseDetectionPoints(jsonString string) ([]models.DetectionPolygonVertex, error) {
   return ParseArray[models.DetectionPolygonVertex](jsonString)
+}
+
+func GetEnv(key, fallback string) string {
+  value, found := os.LookupEnv(key)
+  if found {
+    return value
+  }
+
+  return fallback
 }

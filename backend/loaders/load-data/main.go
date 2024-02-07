@@ -21,11 +21,11 @@ func init() {
 }
 
 func main() {
-	// Set up custom structured logging with colorized output
-	slog.SetDefault(slog.New(tint.NewHandler(os.Stderr, &tint.Options{
-		Level:      slog.LevelDebug,
-		TimeFormat: time.TimeOnly,
-	})))
+  // Set up custom structured logging with colorized output
+  slog.SetDefault(slog.New(tint.NewHandler(os.Stderr, &tint.Options{
+    Level: slog.LevelDebug,
+    TimeFormat: time.TimeOnly,
+  })))
 
   rootCmd.Execute()
 }
