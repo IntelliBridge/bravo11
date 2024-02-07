@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+  "fmt"
+  "time"
+)
 
 type DetectionPolygonVertex struct {
   Lat float64 `json:"lat"`
@@ -51,7 +54,7 @@ type Detection struct {
 
 func (d Detection) ToDocument() (string, DetectionDocument) {
   return d.EntityId, DetectionDocument {
-    d.EntityId,
+    fmt.Sprintf("%s_%s", d.EntityId, d.DetectionTimestamp.Format(time.RFC3339)),
     ElasticGeoPoint{
       Lat: d.DetectionLat,
       Lon: d.DetectionLon,
