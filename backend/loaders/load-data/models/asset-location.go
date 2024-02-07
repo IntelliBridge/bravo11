@@ -11,9 +11,9 @@ const (
 )
 
 type AssetLocation struct {
-  _id string
-  asset_type string
-  source_type LocationSourceType
-  location ElasticGeoPoint
-  timestamp time.Time
+  EntityId string `json:"entityId"`
+  AssetType string `json:"assetType"`
+  SourceType LocationSourceType `json:"sourceType"`
+  Location ElasticGeoPoint `json:"location"`
+  Timestamp time.Time `json:"timestamp"`
 }
