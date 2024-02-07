@@ -6,6 +6,7 @@ import (
   "errors"
   "fmt"
   "log/slog"
+  "math"
   "math/rand"
   "os"
   "strconv"
@@ -16,7 +17,7 @@ import (
   "github.com/spf13/cobra"
 
   "load-data/models"
-  )
+)
 
 func init() {
   GenerateSatDetectionsCmd.Flags().StringP(
@@ -48,7 +49,7 @@ var GenerateSatDetectionsCmd = &cobra.Command{
 
     writer := csv.NewWriter(os.Stdout)
 
-    if baseCmd.BoolFlagVal("no-header") {
+    if !baseCmd.BoolFlagVal("no-header") {
       err := writer.Write([]string{
         "entity_id",
         "detection_lat",
@@ -104,10 +105,38 @@ var GenerateSatDetectionsCmd = &cobra.Command{
     latRange := bounds[1][0] - bounds[0][0]
     lonRange := bounds[1][1] - bounds[0][1]
 
+    existing := make(map[string]models.Detection)
+    existingIds := make([]string,0)
+
     for i := 0; i < num; i++ {
-      ts := start.Add(time.Duration(int64(end.Sub(start).Seconds() * rand.Float64() * float64(time.Second))))
-      lat := bounds[0][0] + rand.Float64() * latRange
-      lon := bounds[0][1] + rand.Float64() * lonRange
+      var entityId string
+      var ts time.Time
+      var lat, lon float64
+      var ont string
+      useExisting := rand.Float64() <= 0.6667 && len(existing) > num / 10
+
+      if useExisting {
+        entityId = existingIds[rand.Intn(len(existing))]
+        data := existing[entityId]
+        deltaT := int64(20 + rand.Intn(40))
+        ts = ts.Add(time.Duration(deltaT * int64(time.Minute)))
+
+        vel := 5 + rand.Float64() * 10
+        dir := rand.Float64() * 2 * math.Pi
+
+        lat = data.DetectionLat + vel * float64(deltaT) * 60 * 0.00001 * math.Sin(dir)
+        lon = data.DetectionLon + vel * float64(deltaT) * 60 * 0.00001 * math.Cos(dir)
+
+        ont = data.DetectionOntology
+      } else {
+        entityId = uuid.NewString()
+        ts = start.Add(time.Duration(int64(end.Sub(start).Seconds() * rand.Float64() * float64(time.Second))))
+        lat = bounds[0][0] + rand.Float64() * latRange
+        lon = bounds[0][1] + rand.Float64() * lonRange
+
+        ont = models.Ontologies[rand.Intn(len(models.Ontologies))]
+      }
+
       poly := []models.DetectionPolygonVertex {
         { lat - 0.0005, lon - 0.0005, 0, 0 },
         { lat - 0.0005, lon + 0.0005, 0, 0 },
@@ -115,27 +144,19 @@ var GenerateSatDetectionsCmd = &cobra.Command{
         { lat + 0.0005, lon - 0.0005, 0, 0 },
       }
 
-      ont := models.Ontologies[rand.Intn(len(models.Ontologies))]
-
-      polyJson, err := json.Marshal(poly)
-      if err != nil {
-        slog.Error(err.Error())
-        return
-      }
-
-      err = writer.Write([]string {
-        uuid.NewString(),
-        strconv.FormatFloat(lat, 'f', -1, 64),
-        strconv.FormatFloat(lon, 'f', -1, 64),
-        ts.Format(time.RFC3339),
+      det := models.Detection{
+        entityId,
+        lat,
+        lon,
+        ts,
         ont,
         "Vehicle",
         "Vehicle",
-        strconv.FormatFloat(rand.Float64(), 'f', 5, 64),
+        float32(rand.Float64()),
         models.ClassificationStrings[rand.Intn(len(models.ClassificationStrings))],
         "_",
         "_",
-        string(polyJson),
+        poly,
         models.ConfidenceLabels[rand.Intn(len(models.ConfidenceLabels))],
         "_",
         models.SourceVendor[rand.Intn(len(models.SourceVendor))],
@@ -144,8 +165,39 @@ var GenerateSatDetectionsCmd = &cobra.Command{
         strconv.FormatFloat(rand.Float64(), 'f', 5, 64),
         strconv.FormatFloat(rand.Float64(), 'f', 5, 64),
         strconv.FormatFloat(rand.Float64(), 'f', 5, 64),
-        fmt.Sprintf(`["%s"]`, uuid.NewString()),
+        []string { uuid.NewString() },
         fmt.Sprintf("https://images.host.local/prefix/%s", uuid.NewString()),
+      }
+
+      polyJson, err := json.Marshal(poly)
+      if err != nil {
+        slog.Error(err.Error())
+        return
+      }
+
+      err = writer.Write([]string {
+        det.EntityId,
+        strconv.FormatFloat(det.DetectionLat, 'f', -1, 64),
+        strconv.FormatFloat(det.DetectionLon, 'f', -1, 64),
+        det.DetectionTimestamp.Format(time.RFC3339),
+        det.DetectionOntology,
+        det.DetectionOntologyCategory,
+        det.DetectionOntologySubcategory,
+        strconv.FormatFloat(float64(det.DetectionConfidence), 'f', 5, 64),
+        det.DetectionClassificationString,
+        det.DetectionAlgorithmName,
+        det.DetectionAlgorithmVersion,
+        string(polyJson),
+        det.BasConfidenceLabel,
+        det.DetectionSourceImageId,
+        det.BasSourceVendor,
+        det.BasSourceProductType,
+        det.BasSourceSensorType,
+        det.BasSourceGsd,
+        det.BasSourceOffNadirAngle,
+        det.BasSourceNiirs,
+        fmt.Sprintf("[\"%s\"]", strings.Join(det.NaiUuids, "\",\"")),
+        det.ImageUrl,
         uuid.NewString(),
       })
       writer.Flush()
@@ -153,6 +205,11 @@ var GenerateSatDetectionsCmd = &cobra.Command{
       if err != nil {
         slog.Error(err.Error())
         return
+      }
+
+      existing[entityId] = det
+      if !useExisting {
+        existingIds = append(existingIds, entityId)
       }
     }
   },
