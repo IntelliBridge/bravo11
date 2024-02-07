@@ -28,6 +28,8 @@ func init() {
 
   LoadSatDetectionsCmd.Flags().StringP("index", "i", "sat-detections", "The ElasticSearch index to load data into")
 
+  LoadSatDetectionsCmd.Flags().String("asset-index", "", "The index to write asset documents to")
+
   LoadSatDetectionsCmd.Flags().BoolP("create-index", "c", false, "Create the index in ElasticSearch")
 }
 
@@ -83,6 +85,8 @@ var LoadSatDetectionsCmd = &cobra.Command{
     ctx := context.Background()
 
     indexName := baseCmd.StringFlagVal("index")
+    assetIndexName := baseCmd.StringFlagVal("asset-index")
+    writeAssetIndex := len(assetIndexName) > 0
     createIndex := baseCmd.BoolFlagVal("create-index")
     if createIndex {
       settings := strings.NewReader(`{
@@ -100,6 +104,17 @@ var LoadSatDetectionsCmd = &cobra.Command{
       })
       if err != nil {
         slog.Warn("Error creating index: " + err.Error())
+      }
+
+      if writeAssetIndex {
+        _, err := osClient.Indices.Create(ctx, opensearchapi.IndicesCreateReq{
+          Index: assetIndexName,
+          Body: settings,
+          Params: opensearchapi.IndicesCreateParams{},
+        })
+        if err != nil {
+          slog.Warn("Error creating index: " + err.Error())
+        }
       }
     }
 
@@ -187,6 +202,26 @@ var LoadSatDetectionsCmd = &cobra.Command{
       })
       if err != nil {
         slog.Error("Error indexing Detection: " + err.Error())
+      }
+
+      if writeAssetIndex {
+        asset := models.AssetLocation{
+          EntityId: document.EntityId,
+          Location: document.Location,
+          AssetType: document.Ontology,
+          SourceType: models.SatelliteDetection,
+          Timestamp: document.Timestamp,
+        }
+        _, err = osClient.Index(
+          ctx,
+          opensearchapi.IndexReq{
+            Index: assetIndexName,
+            DocumentID: id,
+            Body: opensearchutil.NewJSONReader(&asset),
+        })
+        if err != nil {
+          slog.Error("Error indexing Detection: " + err.Error())
+        }
       }
     }
   },
