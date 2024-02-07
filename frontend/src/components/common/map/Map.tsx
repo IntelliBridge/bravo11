@@ -31,6 +31,7 @@ import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
 import { AnySourceData } from "mapbox-gl";
+import Chat from "components/ui/cards/Chat";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -550,13 +551,7 @@ function Cop(props: CopProps) {
     </>
   );
 
-  const chatTab = (
-    <iframe
-      style={{ width: "100%", height: 600, border: "none" }}
-      src={`./chat/channel/general?layout=embedded`}
-      title="Chat"
-    ></iframe>
-  );
+  const chatTab = <Chat />;
 
   const timebar = (
     <div
@@ -655,7 +650,7 @@ function Cop(props: CopProps) {
     <div
       className={"bp4-dark"}
       style={{
-        height: "80vh",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
         position: "relative",
