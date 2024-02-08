@@ -1,7 +1,6 @@
 from typing import Any
 from langchain import hub
-from langchain.agents import initialize_agent
-from langchain.agents import AgentType
+from langchain.agents import initialize_agent, AgentType, AgentExecutor, create_react_agent
 from langchain.memory import ChatMessageHistory
 from langchain_community.llms.bedrock import Bedrock
 from apps.prompt.services.tools import ship_details
@@ -40,15 +39,24 @@ class ChatAgentService:
         self.agent = self.setup_agent()
 
     def setup_agent(self) -> AgentExecutor:
-        return initialize_agent(
-            tools,
-            self.model,
-            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        prompt = hub.pull("hwchase17/react")
+        agent = create_react_agent(self.model, tools, prompt)
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
             verbose=True,
-            max_iteration=2,
-            return_intermediate_steps=True,
-            handle_parsing_errors=True,
+            max_iterations=2,
         )
+        # return initialize_agent(
+        #     tools,
+        #     self.model,
+        #     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        #     verbose=True,
+        #     max_iteration=2,
+        #     return_intermediate_steps=True,
+        #     handle_parsing_errors=True,
+        # )
+        return agent_executor
 
     def _create_messages(self, messages: list[object]) -> ChatMessageHistory:
         demo_ephemeral_chat_history = ChatMessageHistory()
@@ -56,24 +64,24 @@ class ChatAgentService:
 
         for message in messages:
             if message["type"] == MessageType.user:
-                demo_ephemeral_chat_history.add_user_message(message["text"])
+                demo_ephemeral_chat_history.add_user_message(message["messages"])
             else:
-                demo_ephemeral_chat_history.add_ai_message(message["text"])
+                demo_ephemeral_chat_history.add_ai_message(message["messages"])
 
         return demo_ephemeral_chat_history
         
     #TODO: temporary uncomment
-    # def invoke(self, prompt: str, messages: list[object] = []) -> Any:
-    #     chat_message = self._create_messages(messages)
-    #     agent_resp = self.agent.invoke({
-    #         "input": prompt,
-    #         "chat_history": chat_message.messages,
-    #     })
-    #     chat_message.add_user_message(prompt)
-    #     chat_message.add_ai_message(agent_resp["output"])
-    #     return agent_resp["output"]
+    def invoke(self, prompt: str, messages: list[object] = []) -> Any:
+        chat_message = self._create_messages(messages)
+        agent_resp = self.agent.invoke({
+            "input": prompt,
+            "chat_history": chat_message.messages,
+        })
+        chat_message.add_user_message(prompt)
+        chat_message.add_ai_message(agent_resp["output"])
+        return agent_resp["output"]
     
     # TODO: temporary invoke method with no context or agents
-    def invoke(self, prompt: str, messages: list[object] = []) -> Any:
+    # def invoke(self, prompt: str, messages: list[object] = []) -> Any:
 
-        return self.model.invoke(prompt)
+    #     return self.model.invoke(prompt)
