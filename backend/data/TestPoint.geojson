@@ -1,0 +1,34 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [109.505, 18.2341]
+      },
+      "properties": {
+        "timestamp": "2023-01-12 02:00:00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [109.505, 18.2341],
+            [109.495, 18.2241],
+            [109.515, 18.2241],
+            [109.495, 18.2441],
+            [109.515, 18.2441],
+            [109.505, 18.2341]
+          ]
+        ]
+      },
+      "properties": {
+        "timestamp": "2023-01-12 02:00:00"
+      }
+    }
+  ]
+}
