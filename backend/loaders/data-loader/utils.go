@@ -600,7 +600,7 @@ func transformSatelliteDataToAsset(data map[string]string) map[string]interface{
 		location = &Location{
 			//shifting data to southern china sea area
 			Lat: lat,
-			Lon: lon + 287,
+			Lon: lon + 277,
 		}
 		output["location"] = location
 	}
