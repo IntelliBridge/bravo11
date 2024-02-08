@@ -242,7 +242,9 @@ function Cop(props: CopProps) {
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(moment().toISOString());
   const [rate, setRate] = useState(1);
-  const [selectedTab, setSelectedTab] = useState("data");
+
+  // const [selectedTab, setSelectedTab] = useState("data");  // todo(myles) uncomment this
+  const [selectedTab, setSelectedTab] = useState("chat");
   const [modalOpen, setModalOpen] = useState(true);
 
   const loadLayer = async (dataLayer: DataLayer, t: Moment) => {
@@ -665,7 +667,8 @@ function Cop(props: CopProps) {
         onLoad={() => {
           setBaseLoading(true);
         }}
-      ></Map>
+        children={null}
+      />
       {timebar}
       <div
         style={{
@@ -673,6 +676,8 @@ function Cop(props: CopProps) {
           position: "absolute",
           margin: 20,
           right: 0,
+          top: 0,
+          maxHeight: "calc(100% - 40px)",
         }}
       >
         <Card elevation={4} style={{ overflow: "hidden" }}>
