@@ -16,7 +16,7 @@ import (
   "github.com/google/uuid"
   "github.com/spf13/cobra"
 
-  "load-data/models"
+  "signalsight-elt/models"
 )
 
 func init() {

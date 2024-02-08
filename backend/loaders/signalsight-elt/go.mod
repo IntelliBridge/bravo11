@@ -1,4 +1,4 @@
-module load-data
+module signalsight-elt
 
 go 1.21
 

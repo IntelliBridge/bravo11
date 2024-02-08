@@ -4,7 +4,7 @@ import (
 
 "encoding/json"
 "errors"
-"load-data/models"
+"signalsight-elt/models"
 "os"
 "strings"
 )

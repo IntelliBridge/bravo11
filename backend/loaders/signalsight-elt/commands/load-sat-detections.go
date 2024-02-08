@@ -19,8 +19,8 @@ import (
   "github.com/elastic/go-elasticsearch/v8/esutil"
   "github.com/spf13/cobra"
 
-  "load-data/models"
-  "load-data/util"
+  "signalsight-elt/models"
+  "signalsight-elt/util"
 )
 
 func init() {

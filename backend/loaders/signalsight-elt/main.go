@@ -7,7 +7,7 @@ import (
   "os"
   "time"
 
-  "load-data/commands"
+  "signalsight-elt/commands"
 )
 
 var rootCmd = &cobra.Command{
