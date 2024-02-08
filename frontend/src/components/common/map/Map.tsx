@@ -1,4 +1,10 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import moment, { Moment } from "moment";
 import {
   Timeline,
@@ -33,6 +39,9 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
+import axios from "axios";
+import useBoundingData, { BoundingBox } from "./useBoundingData";
+import useGeoTransform from "./useGeoTransform";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -40,194 +49,7 @@ interface CopProps {
   terrain: Terrain;
 }
 
-const DATA_POINTS = 100;
-const INITIAL_LAT = 14.628;
-const INITIAL_LONG = 115.834;
-
-function randomIntFromInterval(min: number, max: number) {
-  // min and max included
-  return Math.floor(Math.random() * (max - min + 1) + min);
-}
-const generateCoordinates = () => {
-  var latitude = INITIAL_LAT;
-  var longitude = INITIAL_LONG;
-  var coords = [];
-  for (var i = 0; i < DATA_POINTS; i++) {
-    var latDiff = 0.01 * randomIntFromInterval(-5, 25);
-    var longDiff = 0.01 * randomIntFromInterval(-5, 25);
-    latitude = latitude + latDiff;
-    longitude = longitude + longDiff;
-    coords.push([longitude, latitude]);
-  }
-  return coords;
-};
-
-const generateCI = (lat: number, long: number) => {
-  var v1: [number, number] = [long, lat];
-  var v2: [number, number] = [long + 15, lat];
-  var v3: [number, number] = [long, lat + 15];
-  return [v1, v2, v3, v1];
-};
-
-var shipCoords = generateCoordinates();
-var planeCoords = generateCoordinates();
-var shipCiCone = generateCI(shipCoords.pop()![1], shipCoords.pop()![0]);
-var planeCiCone = generateCI(planeCoords.pop()![1], planeCoords.pop()![0]);
-
-const shipLayer: DataLayer = {
-  name: "Ships",
-  group: "OSINT",
-  type: "geojson",
-  timeWindow: 2592000000,
-  timeField: "",
-  locationField: "location",
-  url: "api endpoint for fetching plane data here",
-  layer: {
-    id: "shipRoute",
-    type: "line",
-    source: "shipRoute",
-    layout: {
-      "line-join": "round",
-      "line-cap": "round",
-    },
-    paint: {
-      "line-color": "#66ff00",
-      "line-width": 4,
-    },
-  },
-};
-
-const shipCiLayer: DataLayer = {
-  name: "Ship Ci Layer",
-  group: "OSINT",
-  type: "geojson",
-  timeWindow: 2592000000,
-  timeField: "",
-  locationField: "location",
-  url: "api endpoint for fetching plane ci verts here",
-  layer: {
-    id: "shipCi",
-    type: "fill",
-    source: "shipRoute",
-    paint: {
-      "fill-color": "#66ff00",
-      "fill-opacity": 0.4,
-    },
-    filter: ["==", "$type", "Polygon"],
-  },
-};
-
-const planeLayer: DataLayer = {
-  name: "Planes",
-  group: "OSINT",
-  type: "geojson",
-  timeWindow: 2592000000,
-  timeField: "",
-  locationField: "location",
-  url: "api endpoint for fetching plane data here",
-  layer: {
-    id: "planeRoute",
-    type: "line",
-    source: "planeRoute",
-    layout: {
-      "line-join": "round",
-      "line-cap": "round",
-    },
-    paint: {
-      "line-color": "#FF007F",
-      "line-width": 4,
-    },
-    filter: ["==", "$type", "LineString"],
-  },
-};
-
-const planeCiLayer: DataLayer = {
-  name: "Plane Ci Layer",
-  group: "OSINT",
-  type: "geojson",
-  timeWindow: 2592000000,
-  timeField: "",
-  locationField: "location",
-  url: "api endpoint for fetching plane ci verts here",
-  layer: {
-    id: "planeCi",
-    type: "fill",
-    source: "planeRoute",
-    paint: {
-      "fill-color": "#FF007F",
-      "fill-opacity": 0.4,
-    },
-    filter: ["==", "$type", "Polygon"],
-  },
-};
-
-const shipSourceData: AnySourceData = {
-  type: "geojson",
-  data: {
-    type: "FeatureCollection",
-    features: [
-      {
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "LineString",
-          coordinates: shipCoords,
-        },
-      },
-      {
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "Polygon",
-          coordinates: [shipCiCone],
-        },
-      },
-    ],
-  },
-};
-
-const planeSourceData: AnySourceData = {
-  type: "geojson",
-  data: {
-    type: "FeatureCollection",
-    features: [
-      {
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "LineString",
-          coordinates: planeCoords,
-        },
-      },
-      {
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "Polygon",
-          coordinates: [planeCiCone],
-        },
-      },
-    ],
-  },
-};
-
-interface SourceDataLookup {
-  key: string;
-  data: AnySourceData;
-}
-
-const dataLayers: DataLayer[] = [shipLayer, planeLayer];
-const ciConeLayers: DataLayer[] = [shipCiLayer, planeCiLayer];
-const dataSources: SourceDataLookup[] = [
-  {
-    key: shipLayer.layer.id,
-    data: shipSourceData,
-  },
-  {
-    key: planeLayer.layer.id,
-    data: planeSourceData,
-  },
-];
+const { REACT_APP_ES_URL } = process.env;
 
 function Cop(props: CopProps) {
   const timelineContainer = useRef(null);
@@ -239,13 +61,12 @@ function Cop(props: CopProps) {
 
   const [baseLayer, setBaseLayer] = useState<string>(props.baseLayers[0].url);
   const [baseLoading, setBaseLoading] = useState(false);
-  const [layers, setLayers] = useState<string[]>([]);
+  const [enabledLayers, setEnabledLayers] = useState<string[]>([]);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(moment().toISOString());
   const [rate, setRate] = useState(1);
 
-  // const [selectedTab, setSelectedTab] = useState("data");  // todo(myles) uncomment this
-  const [selectedTab, setSelectedTab] = useState("filter");
+  const [selectedTab, setSelectedTab] = useState("data");
   const [modalOpen, setModalOpen] = useState(true);
 
   const loadLayer = async (dataLayer: DataLayer, t: Moment) => {
@@ -259,38 +80,46 @@ function Cop(props: CopProps) {
     }
   };
 
+  const [bounds, setBounds] = useState<BoundingBox>(); // don't use this for now lmao
+  const { data: boundingData } = useBoundingData("/mock/some-data.json");
+  const { data: transformedData } = useGeoTransform(boundingData);
+
   useEffect(() => {
-    dataLayers.forEach((layer: DataLayer) => {
-      const layerOnMap =
-        map.current?.getMap().getLayer(layer.layer.id) !== undefined;
-      var ciLayer = ciConeLayers.find((s) => s.layer.source === layer.layer.id);
-      if (layerOnMap && !layers.includes(layer.layer.id)) {
-        map.current?.getMap().removeLayer(layer.layer.id);
-        if (ciLayer) {
-          map.current?.getMap().removeLayer(ciLayer.layer.id);
-        }
-        map.current?.getMap().removeSource(layer.layer.id);
-      }
+    console.log(transformedData);
+  }, [boundingData]);
 
-      var data = dataSources.find((s) => s.key === layer.layer.id);
-      if (
-        !layerOnMap &&
-        layers.includes(layer.layer.id) &&
-        data !== undefined
-      ) {
-        map.current?.getMap().addSource(layer.layer.id, data.data);
-        map.current?.getMap().addLayer(layer.layer);
-        // get ci data
-        if (ciLayer) {
-          map.current?.getMap().addLayer(ciLayer.layer);
-        }
-
-        map.current
-          ?.getMap()
-          .flyTo({ center: [INITIAL_LONG + 5, INITIAL_LAT + 5], zoom: 4 });
-      }
-    });
-  }, [layers, baseLoading]);
+  // useEffect(() => {
+  //   dataLayers.forEach((layer: DataLayer) => {
+  //     const layerOnMap =
+  //       map.current?.getMap().getLayer(layer.layer.id) !== undefined;
+  //     var ciLayer = ciConeLayers.find((s) => s.layer.source === layer.layer.id);
+  //     if (layerOnMap && !layers.includes(layer.layer.id)) {
+  //       map.current?.getMap().removeLayer(layer.layer.id);
+  //       if (ciLayer) {
+  //         map.current?.getMap().removeLayer(ciLayer.layer.id);
+  //       }
+  //       map.current?.getMap().removeSource(layer.layer.id);
+  //     }
+  //
+  //     var data = dataSources.find((s) => s.key === layer.layer.id);
+  //     if (
+  //       !layerOnMap &&
+  //       layers.includes(layer.layer.id) &&
+  //       data !== undefined
+  //     ) {
+  //       map.current?.getMap().addSource(layer.layer.id, data.data);
+  //       map.current?.getMap().addLayer(layer.layer);
+  //       // get ci data
+  //       if (ciLayer) {
+  //         map.current?.getMap().addLayer(ciLayer.layer);
+  //       }
+  //
+  //       map.current
+  //         ?.getMap()
+  //         .flyTo({ center: [INITIAL_LONG + 5, INITIAL_LAT + 5], zoom: 4 });
+  //     }
+  //   });
+  // }, [layers, baseLoading]);
 
   // useEffect(() => {
   //   props.dataLayers.forEach((dataLayer: DataLayer) => {
@@ -512,33 +341,39 @@ function Cop(props: CopProps) {
 
   const checkboxes: JSX.Element[] = [];
   let previousGroup = "";
-  dataLayers.forEach((l: DataLayer) => {
-    if (l.group !== previousGroup) {
-      previousGroup = l.group;
-      checkboxes.push(
-        <H6 key={l.group} style={{ marginTop: 20 }}>
-          {l.group}
-        </H6>
-      );
-    }
 
-    checkboxes.push(
-      <Checkbox
-        key={l.name}
-        label={l.name}
-        checked={layers.includes(l.layer.id)}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-          if (e.target.checked) {
-            setLayers([...layers, l.layer.id]);
-          } else {
-            let tmpLayers = layers.slice(0);
-            tmpLayers = tmpLayers.filter((layer) => layer !== l.layer.id);
-            setLayers(tmpLayers);
-          }
-        }}
-      />
-    );
-  });
+  useEffect(() => {
+    const layers = [...props.dataLayers];
+
+    // add data layer props
+    layers.forEach((l: DataLayer) => {
+      if (l.group !== previousGroup) {
+        previousGroup = l.group;
+        checkboxes.push(
+          <H6 key={l.group} style={{ marginTop: 20 }}>
+            {l.group}
+          </H6>
+        );
+      }
+
+      checkboxes.push(
+        <Checkbox
+          key={l.name}
+          label={l.name}
+          checked={layers.includes(l.layer.id)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            if (e.target.checked) {
+              setEnabledLayers([...layers, l.layer.id]);
+            } else {
+              setEnabledLayers((prev) =>
+                prev.filter((id) => id !== l.layer.id)
+              );
+            }
+          }}
+        />
+      );
+    });
+  }, [props.dataLayers]);
 
   const dataLayerTab = (
     <>
@@ -700,6 +535,11 @@ function Cop(props: CopProps) {
         antialias={true}
         onLoad={() => {
           setBaseLoading(true);
+        }}
+        onRender={(_e) => {
+          if (!map.current) return;
+          const { _sw, _ne } = map.current?.getBounds();
+          setBounds({ _sw, _ne });
         }}
         children={null}
       />

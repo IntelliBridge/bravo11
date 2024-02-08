@@ -47,7 +47,7 @@ const application: NavItemType = {
             disabled: true
         },
         {
-            id: 'graph',
+            id: 'doc-upload',
             title: <FormattedMessage id="doc-upload" />,
             type: 'item',
             icon: icons.IconFileUpload,
