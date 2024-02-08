@@ -7,13 +7,6 @@ Behold My Awesome Project!
 
 License: MIT
 
-## set aws vars
-Add the following env vars to `./.envs/.local/.aws` with your env keys
-```
-AWS_ACCESS_KEY=
-AWS_SECRET_KEY=
-```
-
 ## local setup
 1. Add the following env vars to `./.envs/.local/.aws` with your env keys
 ```
