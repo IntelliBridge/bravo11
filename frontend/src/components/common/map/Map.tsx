@@ -267,11 +267,45 @@ function Cop(props: CopProps) {
   const [modalOpen, setModalOpen] = useState(true);
 
   const loadLayer = async (dataLayer: DataLayer, t: Moment) => {
-    // const response = await fetch(getGeojsonURL(dataLayer, t));
-    // const features = await response.json();
+    // var features: any[] = [];
+    // console.log("data")
+    // console.log(data);
+    // data.data.features.forEach((f: any) => {
+    //   var upperBoundTime = t.toDate();
+    //   var truncateIndex = f.properties.timestamp.findIndex((e: any) => {
+    //     console.log(new Date(e))
+    //     console.log(upperBoundTime);
+    //     return new Date(e) > upperBoundTime;
+    //
+    //   });
+    //
+    //   var length = f.geometry.coordinates;
+    //   var truncatedCoords = f.geometry.coordinates.slice(truncateIndex, length);
+    //   let feature: any = {
+    //     id: f.id,
+    //     properties: {
+    //       timestamp: f.properties.timestamp
+    //     },
+    //     type: "LineString",
+    //     geometry: {
+    //       type: "LineString",
+    //       coordinates: truncatedCoords
+    //     }
+    //   };
+    //   features.push(feature);
+    // });
+    // const assetSourceData: AnySourceData = {
+    //   type: 'geojson',
+    //   data: {
+    //     type: 'FeatureCollection',
+    //     features: features
+    //   }
+    // };
+    // console.log("new data")
+    // console.log(assetSourceData);
+    // // @ts-ignore
+    // map.current?.getMap().getSource(dataLayer.layer.id).setData(assetSourceData);
 
-    // @ts-ignore
-    map.current?.getMap().getSource(dataLayer.name).setData(features);
   };
 
   useEffect(() => {
@@ -306,115 +340,6 @@ function Cop(props: CopProps) {
   }, [layers, baseLoading]);
 
 
-  // useEffect(() => {
-  //   props.dataLayers.forEach((dataLayer: DataLayer) => {
-  //     const layerOnMap =
-  //       map.current?.getMap().getLayer(dataLayer.name) !== undefined;
-  //
-  //     if (layerOnMap && !layers.includes(dataLayer.name)) {
-  //       map.current?.getMap().removeLayer(dataLayer.name);
-  //       map.current?.getMap().removeSource(dataLayer.name);
-  //     }
-  //
-  //     if (!layerOnMap && layers.includes(dataLayer.name)) {
-  //       if (currentTime.current === null) {
-  //         return;
-  //       }
-  //
-  //       if (dataLayer.type === "vector") {
-  //         map.current?.getMap().addSource(dataLayer.name, {
-  //           type: "vector",
-  //           tiles: [getVectorURL(dataLayer, currentTime.current)],
-  //           minzoom: 0,
-  //           maxzoom: 24,
-  //           promoteId: "_id",
-  //         });
-  //       } else if (dataLayer.type === "geojson") {
-  //         map.current?.getMap().addSource(dataLayer.name, {
-  //           type: "geojson",
-  //           data: getGeojsonURL(dataLayer, currentTime.current),
-  //           promoteId: "_id",
-  //         });
-  //       }
-  //
-  //       map.current?.getMap().addLayer(dataLayer.layer);
-  //
-  //       if (dataLayer.type === "vector") {
-  //         map.current?.on("mousemove", dataLayer.name, (event) => {
-  //           if (map.current == null) return;
-  //
-  //           map.current.getCanvas().style.cursor = "pointer";
-  //
-  //           // Check whether features exist
-  //           if (event.features === undefined || event.features.length === 0)
-  //             return;
-  //
-  //           if (hover.current !== null && hoverLayer.current !== null) {
-  //             map.current.removeFeatureState({
-  //               source: hoverLayer.current,
-  //               id: hover.current,
-  //               sourceLayer: "hits",
-  //             });
-  //           }
-  //
-  //           const id = event.features[0].id;
-  //
-  //           if (id !== undefined) {
-  //             hover.current = id as number;
-  //             hoverLayer.current = dataLayer.name;
-  //
-  //             map.current.setFeatureState(
-  //               {
-  //                 source: hoverLayer.current,
-  //                 id: hover.current,
-  //                 sourceLayer: "hits",
-  //               },
-  //               {
-  //                 hover: true,
-  //               }
-  //             );
-  //           }
-  //         });
-  //
-  //         map.current?.on("mouseleave", dataLayer.name, function () {
-  //           if (map.current == null) return;
-  //
-  //           map.current.getCanvas().style.cursor = "";
-  //
-  //           if (hover.current !== null && hoverLayer.current !== null) {
-  //             map.current.setFeatureState(
-  //               {
-  //                 source: hoverLayer.current,
-  //                 id: hover.current,
-  //                 sourceLayer: "hits",
-  //               },
-  //               { hover: false }
-  //             );
-  //           }
-  //           hover.current = null;
-  //         });
-  //       }
-  //
-  //       map.current?.on("click", dataLayer.name, async (event) => {
-  //         if (map.current == null) return;
-  //
-  //         // Check whether features exist
-  //         if (event.features === undefined || event.features.length === 0)
-  //           return;
-  //
-  //         const f = event.features[0];
-  //         if (f.properties !== null) {
-  //           const response = await fetch(
-  //             `/api/info/${f.properties._index}/_doc/${f.properties._id}`
-  //           );
-  //           const feature = await response.json();
-  //           setFeature(feature);
-  //         }
-  //       });
-  //     }
-  //   });
-  // }, [layers, baseLoading, props.dataLayers]);
-
 
   const throttleFunc = throttle(1000, (t) => {
     currentTime.current = moment(t.time);
@@ -422,10 +347,9 @@ function Cop(props: CopProps) {
 
     const currentLayers = map.current?.getMap().getStyle().layers;
     currentLayers?.forEach((layer) => {
-      const dataLayer = props.dataLayers.find(
-        (d: DataLayer) => d.name === layer.id
+      const dataLayer = dataLayers.find(
+        (d: DataLayer) => d.layer.id === layer.id
       );
-
       if (dataLayer) {
         loadLayer(dataLayer, t.time);
       }
