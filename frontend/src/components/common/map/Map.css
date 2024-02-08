@@ -1,6 +1,6 @@
-div[mapboxgl-children] {
-  display: none;
-}
+/* div[mapboxgl-children] { */
+/*   display: none; */
+/* } */
 
 .map-wrap {
     position: relative;

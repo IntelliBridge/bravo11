@@ -32,8 +32,8 @@ export default function useBoundingData(
         filter: {
           geo_bounding_box: {
             location: {
-              top_left: { lat: box?._ne.lat, lon: box?._ne.lng },
-              bottom_right: { lat: box?._sw.lat, lon: box?._sw.lng },
+              top_right: { lat: box?._ne.lat, lon: box?._ne.lng },
+              bottom_left: { lat: box?._sw.lat, lon: box?._sw.lng },
             },
           },
         },
