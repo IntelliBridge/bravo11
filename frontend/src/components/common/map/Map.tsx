@@ -21,7 +21,6 @@ import {
 } from "@blueprintjs/core";
 import Map, { Layer, MapProvider, MapRef, Marker } from "react-map-gl/maplibre";
 import { OutlinedInput } from "@mui/material";
-import axios from "axios";
 
 import { BaseLayer, DataLayer, Terrain } from "../../../types/map";
 import Chat from "components/ui/cards/Chat";
@@ -390,7 +389,7 @@ function Cop(props: CopProps) {
     </>
   );
 
-  const chatTab = <Chat />;
+  const chatTab = <Chat bounds={bounds} assetId={""}/>;
 
   const timebar = (
     <div

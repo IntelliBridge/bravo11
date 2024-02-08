@@ -2,6 +2,7 @@ import React from "react";
 
 // material-ui
 import { Card, CardContent, Grid, Typography, Theme } from "@mui/material";
+import Markdown from 'react-markdown';
 
 // project imports
 import { gridSpacing } from "store/slices/legacy/constant";
@@ -21,7 +22,7 @@ const ChartHistory = ({ data, theme, user }: ChartHistoryProps) => (
     <Grid container spacing={gridSpacing}>
       {data.map((history, index) => (
         <React.Fragment key={index}>
-          {history.from !== user.name ? (
+          {history.from !== "LL2Bot" ? (
             <Grid item xs={12} sx={{}}>
               <Grid id='findme-container' container spacing={gridSpacing}>
                 <Grid item xs={10}>
@@ -52,7 +53,7 @@ const ChartHistory = ({ data, theme, user }: ChartHistoryProps) => (
                               theme.palette.mode === "dark" ? "dark.900" : ""
                             }
                           >
-                            {history.text}
+                              <Markdown>{history.text ? history.text : ""}</Markdown>
                           </Typography>
                         </Grid>
                         <Grid item xs={12}>
@@ -90,7 +91,7 @@ const ChartHistory = ({ data, theme, user }: ChartHistoryProps) => (
                       <Grid container spacing={1}>
                         <Grid item xs={12}>
                           <Typography variant="body2">
-                            {history.text}
+                              <Markdown>{history.text ? history.text : ""}</Markdown>
                           </Typography>
                         </Grid>
                         <Grid item xs={12}>

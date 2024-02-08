@@ -13,7 +13,6 @@ import {
 
 // third-party
 import PerfectScrollbar from "react-perfect-scrollbar";
-import { EmojiClickData } from "emoji-picker-react";
 
 // project imports
 import ChartHistory from "../../views/application/chat/ChartHistory";
@@ -32,11 +31,17 @@ import SendTwoToneIcon from "@mui/icons-material/SendTwoTone";
 import { UserProfile } from "types/user-profile";
 import { History as HistoryProps } from "types/chat";
 
-import "mapbox-gl/dist/mapbox-gl.css";
+import { BoundingBox } from "@/components/common/map/useBoundingData";
+import axios from "axios";
 
 // ==============================|| APPLICATION CHAT ||============================== //
 
-const ChatMainPage = () => {
+interface ChatProps {
+  bounds: BoundingBox | undefined,
+  assetId: string
+}
+
+const ChatMainPage = (props: ChatProps) => {
   const theme = useTheme();
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -82,16 +87,67 @@ const ChatMainPage = () => {
   const [message, setMessage] = useState("");
   const handleOnSend = () => {
     const d = new Date();
+    var question = message;
     setMessage("");
     const newMessage = {
       from: "User1",
-      to: user.name,
+      to: "LL2Bot",
       text: message,
       time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
     setData((prevState) => [...prevState, newMessage]);
-    dispatch(insertChat(newMessage));
+    fetchAnswer(question);
   };
+
+  const fetchAnswer = async (q: string) => {
+    try {
+      const url = "https://5bb0-72-253-135-20.ngrok-free.app/api/v1/prompt/";
+      const query: any = {
+        "prompt": q,
+        "bounding_box": {
+          "top_right": {
+            "lat": props.bounds?._ne.lat,
+            "lon": props.bounds?._ne.lng
+
+          },
+          "bottom_left": {
+            "lat": props.bounds?._sw.lat,
+            "lon": props.bounds?._sw.lng
+          }
+        }
+      }
+      if (props.assetId !== "") {
+        query.assetId = props.assetId;
+      }
+      const result = await axios.post(url, query)
+      console.log(result);
+      // fake user typing
+      setTimeout(() => {
+        const d = new Date();
+
+        const newMessage = {
+          from: "LL2Bot",
+          to: "User1",
+          text: result.data.message,
+          time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+        setData((prevState) => [...prevState, newMessage]);
+      }, 200);
+    } catch (e) {
+      const d = new Date();
+      const newMessage = {
+        from: "LL2Bot",
+        to: "User1",
+        text: "Invalid query, please ask again.",
+        time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setData((prevState) => [...prevState, newMessage]);
+    }
+  }
+
+  useEffect(() => {
+    console.log(data)
+  }, [data]);
 
   const handleEnter = (
     event: React.KeyboardEvent<HTMLDivElement> | undefined
