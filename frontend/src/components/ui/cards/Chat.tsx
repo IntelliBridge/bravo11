@@ -102,6 +102,8 @@ const ChatMainPage = () => {
     handleOnSend();
   };
 
+  React.useEffect(() => console.log(theme), [theme]); // deleteme(myles)
+
   if (loading) return <Loader />;
 
   return (

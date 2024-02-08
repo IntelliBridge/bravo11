@@ -21,8 +21,11 @@ import {
 } from "@blueprintjs/core";
 import Map, { MapRef } from "react-map-gl";
 import maplibregl from "maplibre-gl";
+import { AnySourceData } from "mapbox-gl";
+import { OutlinedInput } from "@mui/material";
 
 import { BaseLayer, DataLayer, Terrain } from "../../../types/map";
+import Chat from "components/ui/cards/Chat";
 
 import "normalize.css";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -30,8 +33,6 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
-import { AnySourceData } from "mapbox-gl";
-import Chat from "components/ui/cards/Chat";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -244,7 +245,7 @@ function Cop(props: CopProps) {
   const [rate, setRate] = useState(1);
 
   // const [selectedTab, setSelectedTab] = useState("data");  // todo(myles) uncomment this
-  const [selectedTab, setSelectedTab] = useState("chat");
+  const [selectedTab, setSelectedTab] = useState("filter");
   const [modalOpen, setModalOpen] = useState(true);
 
   const loadLayer = async (dataLayer: DataLayer, t: Moment) => {
@@ -546,10 +547,43 @@ function Cop(props: CopProps) {
     </>
   );
 
+  const [filterId, setFilterId] = useState("");
+  const [filterPort, setFilterPort] = useState("");
+  const handleFilter = useCallback(() => {
+    console.log("do something :)");
+    console.log(filterId, filterPort);
+  }, [filterId, filterPort]);
+
   const filterLayerTab = (
     <>
       <H5 style={{ marginBottom: 20 }}>Filter</H5>
-      <span>something here</span>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div>
+          <H6>Entity ID</H6>
+          <OutlinedInput
+            id="filter-id"
+            fullWidth
+            value={filterId}
+            onChange={(e) => setFilterId(e.target.value)}
+            aria-describedby="filter-id-text"
+            inputProps={{ "aria-label": "weight" }}
+          />
+        </div>
+        <div>
+          <H6>Port o' origin</H6>
+          <OutlinedInput
+            id="filter-port"
+            fullWidth
+            value={filterPort}
+            onChange={(e) => setFilterPort(e.target.value)}
+            aria-describedby="filter-port-text"
+            inputProps={{ "aria-label": "weight" }}
+          />
+        </div>
+        <Button large onClick={handleFilter}>
+          <span style={{ fontWeight: 600 }}>Filter</span>
+        </Button>
+      </div>
     </>
   );
 
