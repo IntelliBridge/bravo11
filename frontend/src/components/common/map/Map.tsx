@@ -390,7 +390,7 @@ function Cop(props: CopProps) {
     </>
   );
 
-  const chatTab = <Chat />;
+  const chatTab = <Chat bounds={bounds} assetId={""}/>;
 
   const timebar = (
     <div
