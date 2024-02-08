@@ -22,7 +22,7 @@ const ChartHistory = ({ data, theme, user }: ChartHistoryProps) => (
     <Grid container spacing={gridSpacing}>
       {data.map((history, index) => (
         <React.Fragment key={index}>
-          {history.from === "LL2Bot" ? (
+          {history.from !== "LL2Bot" ? (
             <Grid item xs={12} sx={{}}>
               <Grid id='findme-container' container spacing={gridSpacing}>
                 <Grid item xs={10}>
@@ -91,7 +91,7 @@ const ChartHistory = ({ data, theme, user }: ChartHistoryProps) => (
                       <Grid container spacing={1}>
                         <Grid item xs={12}>
                           <Typography variant="body2">
-                            {history.text}
+                              <Markdown>{history.text ? history.text : ""}</Markdown>
                           </Typography>
                         </Grid>
                         <Grid item xs={12}>

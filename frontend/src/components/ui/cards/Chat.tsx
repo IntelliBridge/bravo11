@@ -13,7 +13,6 @@ import {
 
 // third-party
 import PerfectScrollbar from "react-perfect-scrollbar";
-import { EmojiClickData } from "emoji-picker-react";
 
 // project imports
 import ChartHistory from "../../views/application/chat/ChartHistory";
@@ -32,8 +31,6 @@ import SendTwoToneIcon from "@mui/icons-material/SendTwoTone";
 import { UserProfile } from "types/user-profile";
 import { History as HistoryProps } from "types/chat";
 
-import "mapbox-gl/dist/mapbox-gl.css";
-import mapboxgl from "mapbox-gl";
 import { BoundingBox } from "@/components/common/map/useBoundingData";
 import axios from "axios";
 
@@ -99,7 +96,6 @@ const ChatMainPage = (props: ChatProps) => {
       time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
     setData((prevState) => [...prevState, newMessage]);
-    dispatch(insertChat(newMessage));
     fetchAnswer(question);
   };
 
@@ -136,8 +132,7 @@ const ChatMainPage = (props: ChatProps) => {
           time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setData((prevState) => [...prevState, newMessage]);
-        dispatch(insertChat(newMessage));
-      }, 500);
+      }, 200);
     } catch (e) {
       const d = new Date();
       const newMessage = {
@@ -147,7 +142,6 @@ const ChatMainPage = (props: ChatProps) => {
         time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setData((prevState) => [...prevState, newMessage]);
-      dispatch(insertChat(newMessage));
     }
   }
 
