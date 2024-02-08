@@ -113,13 +113,13 @@ var GenerateSatDetectionsCmd = &cobra.Command{
       var ts time.Time
       var lat, lon float64
       var ont string
-      useExisting := rand.Float64() <= 0.6667 && len(existing) > num / 10
+      useExisting := rand.Float64() <= 0.9 && len(existing) > num / 20
 
       if useExisting {
         entityId = existingIds[rand.Intn(len(existing))]
         data := existing[entityId]
         deltaT := int64(20 + rand.Intn(40))
-        ts = ts.Add(time.Duration(deltaT * int64(time.Minute)))
+        ts = data.DetectionTimestamp.Add(time.Duration(deltaT * int64(time.Minute)))
 
         vel := 5 + rand.Float64() * 10
         dir := rand.Float64() * 2 * math.Pi
