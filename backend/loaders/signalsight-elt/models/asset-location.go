@@ -15,6 +15,7 @@ type AssetLocation struct {
   AssetType string `json:"assetType"`
   SourceType LocationSourceType `json:"sourceType"`
   Location ElasticGeoPoint `json:"location"`
+  LonLatArray [2]float64 `json:"lonLatArray"`
   Timestamp time.Time `json:"timestamp"`
 }
 

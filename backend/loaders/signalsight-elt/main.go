@@ -18,6 +18,7 @@ var rootCmd = &cobra.Command{
 func init() {
   rootCmd.AddCommand(commands.GenerateSatDetectionsCmd)
   rootCmd.AddCommand(commands.LoadSatDetectionsCmd)
+  rootCmd.AddCommand(commands.PredictLocationsCmd)
 }
 
 func main() {
