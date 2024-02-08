@@ -1,10 +1,4 @@
-import React, {
-  useRef,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import moment, { Moment } from "moment";
 import {
   Timeline,
@@ -25,13 +19,14 @@ import {
   H6,
   Checkbox,
 } from "@blueprintjs/core";
-import Map, { MapRef } from "react-map-gl";
-import maplibregl from "maplibre-gl";
-import { AnySourceData } from "mapbox-gl";
+import Map, { Layer, MapProvider, MapRef, Marker } from "react-map-gl/maplibre";
 import { OutlinedInput } from "@mui/material";
+import axios from "axios";
 
 import { BaseLayer, DataLayer, Terrain } from "../../../types/map";
 import Chat from "components/ui/cards/Chat";
+import useBoundingData, { BoundingBox } from "./useBoundingData";
+import useGeoTransform from "./useGeoTransform";
 
 import "normalize.css";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -39,9 +34,6 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
-import axios from "axios";
-import useBoundingData, { BoundingBox } from "./useBoundingData";
-import useGeoTransform from "./useGeoTransform";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -76,17 +68,17 @@ function Cop(props: CopProps) {
       // console.log(features);
       // @ts-ignore
       // map.current?.getMap().getSource(dataLayer.name).setData(features);
-      map.current?.getMap().getSource(dataLayer.name).setData(geoJson);
+      // map.current?.getMap().getSource(dataLayer.name).setData(geoJson);
     }
   };
 
   const [bounds, setBounds] = useState<BoundingBox>(); // don't use this for now lmao
   const { data: boundingData } = useBoundingData("/mock/some-data.json");
-  const { data: transformedData } = useGeoTransform(boundingData);
+  const { data: boundingDataSource } = useGeoTransform(boundingData);
 
   useEffect(() => {
-    console.log(transformedData);
-  }, [boundingData]);
+    console.log(boundingDataSource);
+  }, [boundingDataSource]);
 
   // useEffect(() => {
   //   dataLayers.forEach((layer: DataLayer) => {
@@ -312,30 +304,6 @@ function Cop(props: CopProps) {
       >
         {radioButtons}
       </RadioGroup>
-      <div style={{ marginTop: 20 }}>
-        <MenuDivider />
-      </div>
-      <H5 style={{ marginBottom: 20, marginTop: 20 }}>Terrain</H5>
-      <Checkbox
-        label={"Terrain"}
-        defaultChecked={false}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-          if (map.current == null) return;
-
-          if (e.target.checked) {
-            map.current.getMap().addSource("terrain", {
-              type: "raster-dem",
-              url: props.terrain.url,
-            });
-            map.current.getMap().setTerrain({
-              source: "terrain",
-            });
-          } else {
-            map.current.getMap().setTerrain();
-            map.current.getMap().removeSource("terrain");
-          }
-        }}
-      />
     </>
   );
 
@@ -517,6 +485,12 @@ function Cop(props: CopProps) {
     </div>
   );
 
+  // deleteme(myles) used for testing
+  useEffect(() => {
+    const current = map.current?.getMap();
+    if (!current || !boundingDataSource) return;
+  }, []);
+
   return (
     <div
       className={"bp4-dark"}
@@ -529,8 +503,7 @@ function Cop(props: CopProps) {
     >
       <Map
         ref={map}
-        // @ts-ignore
-        mapLib={maplibregl}
+        mapLib={import("maplibre-gl")}
         mapStyle={baseLayer}
         antialias={true}
         onLoad={() => {
@@ -541,8 +514,27 @@ function Cop(props: CopProps) {
           const { _sw, _ne } = map.current?.getBounds();
           setBounds({ _sw, _ne });
         }}
-        children={null}
-      />
+        initialViewState={{ latitude: 0, longitude: 0, zoom: 4 }}
+      >
+        <Marker latitude={0} longitude={0}></Marker>
+        {/* {boundingDataSource && */}
+        {/*   boundingDataSource.features.map((f, i) => { */}
+        {/*     if (f.geometry.type === "Point") { */}
+        {/*       console.log("writing point", f.geometry.coordinates); // deleteme(myles) */}
+        {/*       return ( */}
+        {/*         <Marker */}
+        {/*           key={i} */}
+        {/*           // latitude={f.geometry.coordinates.at(0) || 0} */}
+        {/*           // longitude={f.geometry.coordinates.at(1) || 0} */}
+        {/*           latitude={0} */}
+        {/*           longitude={0} */}
+        {/*         /> */}
+        {/*       ); */}
+        {/*     } else { */}
+        {/*       return null; */}
+        {/*     } */}
+        {/*   })} */}
+      </Map>
       {timebar}
       <div
         style={{

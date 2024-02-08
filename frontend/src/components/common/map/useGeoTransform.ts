@@ -1,15 +1,29 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, } from "react";
 import { estypes } from "@elastic/elasticsearch";
-import { GeoJSON } from 'geojson';
 
-// note(myles) we expect an 
-export default function useGeoTransform(elasticHits: estypes.SearchHit[]) {
-    // const [data, setData] = useState();
-    
-    const data = useMemo(() => {
-        
-    }, [elasticHits])
-    
+// note(myles) we expect an
+export default function useGeoTransform(elasticHits?: estypes.SearchHit[]) {
+  const data = useMemo(() => {
+    if (!elasticHits || elasticHits?.length === 0) return;
 
-    return { data };
+    const collection: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: elasticHits.map((hit) => {
+        const source: any = hit._source;
+        const coordinates = source.location;
+        return {
+          type: "Feature",
+          properties: source,
+          geometry: {
+            type: "Point",
+            coordinates: [coordinates.lat as number, coordinates.lon as number],
+          },
+        };
+      }),
+    };
+
+    return collection;
+  }, [elasticHits]);
+
+  return { data };
 }
