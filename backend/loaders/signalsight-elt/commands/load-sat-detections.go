@@ -245,17 +245,14 @@ var LoadSatDetectionsCmd = &cobra.Command{
 
             OnFailure: func(ctx context.Context, item esutil.BulkIndexerItem, res esutil.BulkIndexerResponseItem, err error) {
               if err != nil {
-                 slog.Error("Error indexing document:" + err.Error())
+                 slog.Error("Error indexing Detection:" + err.Error())
               } else {
-                 slog.Error("Error indexing document", "ErrorType", res.Error.Type, "ErrorReason", res.Error.Reason)
+                 slog.Error("Error indexing Detection", "ErrorType", res.Error.Type, "ErrorReason", res.Error.Reason)
               }
             },
         })
       } else {
-        _, err = esClient.Index(
-          indexName,
-          bytes.NewReader(data),
-        )
+        err = util.IndexDocument(esClient, indexName, document, id)
       }
       if err != nil {
         slog.Error("Error indexing Detection: " + err.Error())
@@ -266,6 +263,7 @@ var LoadSatDetectionsCmd = &cobra.Command{
         asset := models.AssetLocation{
           EntityId: document.EntityId,
           Location: document.Location,
+          LonLatArray: [2]float64 { document.Location.Lon, document.Location.Lat },
           AssetType: document.Ontology,
           SourceType: models.SatelliteDetection,
           Timestamp: document.Timestamp,
@@ -289,21 +287,18 @@ var LoadSatDetectionsCmd = &cobra.Command{
 
               OnFailure: func(ctx context.Context, item esutil.BulkIndexerItem, res esutil.BulkIndexerResponseItem, err error) {
                 if err != nil {
-                   slog.Error("Error indexing document:" + err.Error())
+                   slog.Error("Error indexing asset:" + err.Error())
                 } else {
-                   slog.Error("Error indexing document", "ErrorType", res.Error.Type, "ErrorReason", res.Error.Reason)
+                   slog.Error("Error indexing asset", "ErrorType", res.Error.Type, "ErrorReason", res.Error.Reason)
                 }
               },
           })
         } else {
-          _, err = esClient.Index(
-            assetIndexName,
-            bytes.NewReader(data),
-          )
+          err = util.IndexDocument(esClient, assetIndexName, asset, id)
         }
 
         if err != nil {
-          slog.Error("Error indexing Detection: " + err.Error())
+          slog.Error("Error indexing asset: " + err.Error())
         }
       }
     }

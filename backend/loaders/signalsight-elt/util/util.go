@@ -2,10 +2,12 @@ package util
 
 import (
 
+"bytes"
 "encoding/json"
 "errors"
-"signalsight-elt/models"
+"io"
 "os"
+"signalsight-elt/models"
 "strings"
 )
 
@@ -60,4 +62,15 @@ func GetEnv(key, fallback string) string {
   }
 
   return fallback
+}
+
+func ReadToEnd(reader io.Reader) string {
+  buf := new(bytes.Buffer)
+
+  _, err := buf.ReadFrom(reader)
+  if err != nil {
+    panic(err)
+  }
+
+  return buf.String()
 }
