@@ -304,9 +304,7 @@ function Cop(props: CopProps) {
 		};
 
 		jsonifyFile("/conf/earthquakes.geojson", setEarthquakeData);
-		console.log(earthquakeData);
 		jsonifyFile("/conf/2023_12_14.geojson", setAISData);
-		console.log(AISData);
 	}, []);
 
 	let earthquakeSourceData: AnySourceData = {
