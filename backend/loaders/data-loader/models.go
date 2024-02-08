@@ -1,7 +1,64 @@
 package main
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
+type SourceType string
+
+const (
+	SourceTypeSatelliteAccess   SourceType = "SatelliteAccess"
+	SourceTypeADSB              SourceType = "ADSB"
+	SourceTypeACLED             SourceType = "ACLED"
+	SourceTypeCountryAssessment SourceType = "CountryAssessment"
+	SourceTypeGDELTExport       SourceType = "GDELTExport"
+	SourceTypeGDELTMention      SourceType = "GDELTMention"
+	SourceTypeInfra             SourceType = "Infra"
+	SourceTypeNatoRedBlue       SourceType = "NATORedBlue"
+	SourceTypeAIS               SourceType = "AIS"
+)
+
+type AssetType string
+
+const (
+	AssetTypeSatellite AssetType = "Satellite"
+	AssetTypeAircraft  AssetType = "Aircraft"
+	AssetTypeVessel    AssetType = "Vessel"
+)
+
+//type Flight struct {
+//	Hex         string       `json:"hex,omitempty"`
+//	Type        string       `json:"type,omitempty"`
+//	Flight      string       `json:"flight,omitempty"`
+//	R           string       `json:"r,omitempty"`
+//	T           string       `json:"t,omitempty"`
+//	AltBaro     int          `json:"alt_baro,omitempty"`
+//	GS          float32      `json:"gs,omitempty"`
+//	Track       float32      `json:"track,omitempty"`
+//	BaroRate    int          `json:"baro_rate,omitempty"`
+//	Squawk      string       `json:"squawk,omitempty"'`
+//	Category    string       `json:"category"`
+//	Lat         string       `json:"lat,omitempty"`
+//	Lon         string       `json:"lon,omitempty"`
+//	Location    *GeoLocation `json:"Location,omitempty"`
+//	LastUpdated time.Time    `json:"LASTUPDATED"`
+//	AltBaro     string       `json:"alt_baro,omitempty"`
+//	// Include other fields as necessary.
+//}
+
+type AssetLocation struct {
+	EntityID   string     `json:"entityId"`
+	AssetType  AssetType  `json:"assetType"`
+	SourceType SourceType `json:"sourceType"`
+	Location   Location   `json:"location"`
+	Timestamp  time.Time  `json:"timestamp"`
+}
+
+type Location struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
 type GeoLocation struct {
 	Lat string `json:"lat"`
 	Lon string `json:"lon"`
@@ -14,6 +71,55 @@ func (g GeoLocation) isValid() bool {
 func (g GeoLocation) ToGeoPointStr() string {
 	return strings.Join([]string{g.Lat, g.Lon}, ",")
 }
+
+const AIS_MAPPING = `
+{
+    "properties": {
+      "location": {
+        "type": "geo_point"
+      },
+      "basedatetime": {
+        "type": "date"
+      }
+    }
+}
+`
+
+const ADSB_MAPPING = `
+{
+    "properties": {
+      "location": {
+        "type": "geo_point"
+      },
+      "time": {
+        "type": "date"
+      }
+    }
+}
+`
+
+const ASSET_MAPPING = `
+{
+    "properties": {
+      "location": {
+        "type": "geo_point"
+      },
+      "timestamp": {
+        "type": "date"
+      }
+    }
+}
+`
+
+const NATO_RED_BLUE_MAPPING = `
+{
+    "properties": {
+      "geo_point": {
+        "type": "geo_point"
+      }
+    }
+}
+`
 
 const INFRA_MAPPING = `
 {
@@ -43,7 +149,10 @@ const SATELLITE_MAPPING = `
       "location": {
         "type": "geo_point"
       },
-      "ACCESS_START": {
+      "access_start": {
+        "type": "date"
+      },
+      "access_end": {
         "type": "date"
       }
     }
@@ -53,16 +162,16 @@ const SATELLITE_MAPPING = `
 const GDELT_EXPORT_MAPPING = `
 {
     "properties": {
-      "ActionGeo_Location": {
+      "action_location": {
         "type": "geo_point"
       },
-      "Actor1Geo_Location": {
+      "actor1_location": {
         "type": "geo_point"
       },
-      "Actor2Geo_Location": {
+      "actor2_location": {
         "type": "geo_point"
       },
-      "DATEADDED": {
+      "dateadded": {
         "type": "date"
       }
     }

@@ -11,6 +11,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/elastic/go-elasticsearch/v8/esutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -18,6 +19,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+	"unicode"
 )
 
 func CreateClient(clusterURLs []string, username string, password string) *elasticsearch.Client {
@@ -62,13 +64,45 @@ func CreateClient(clusterURLs []string, username string, password string) *elast
 	return es
 }
 
-func InsertCSVDataToElastic(es *elasticsearch.Client, indexName string, mapping string, inputFolder string) {
+func ResetDataForElasticIndex(es *elasticsearch.Client, sourceType SourceType, indexName string, mapping string, inputFolder string) {
+	InsertCSVDataToElastic(es, sourceType, indexName, mapping, inputFolder, false)
+}
+
+func AppendDataForElasticIndex(es *elasticsearch.Client, sourceType SourceType, indexName string, inputFolder string) {
+	InsertCSVDataToElastic(es, sourceType, indexName, "", inputFolder, true)
+}
+
+func InsertCSVDataToElastic(es *elasticsearch.Client, sourceType SourceType, indexName string, mapping string, inputFolder string, appendMode bool) {
 	items, err := os.ReadDir(inputFolder)
 	if err != nil {
 		log.Println(err)
-		return
 	}
 	dataset := make([]interface{}, 0)
+	itemsToMatch := make(map[string]bool)
+
+	if sourceType == SourceTypeAIS && len(items) > 0 {
+		csvFile, err := os.Open(filepath.Join(inputFolder, items[0].Name()))
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		reader := csv.NewReader(csvFile)
+		reader.FieldsPerRecord = -1
+		reader.LazyQuotes = true
+
+		for {
+			r, err := reader.Read()
+			if err == io.EOF {
+				break
+			}
+			if len(itemsToMatch) < 5000 {
+				itemsToMatch[r[0]] = true
+			} else {
+				break
+			}
+		}
+		csvFile.Close()
+	}
 	for _, item := range items {
 		if !item.IsDir() {
 			info, err := item.Info()
@@ -76,14 +110,17 @@ func InsertCSVDataToElastic(es *elasticsearch.Client, indexName string, mapping 
 				log.Fatal(err)
 			}
 			log.Println(info.Name())
-			data := ConvertGdeltCsvToJson(filepath.Join(inputFolder, info.Name()))
-			dataset = append(dataset, data...)
+			rawData := ConvertCsvToJson(filepath.Join(inputFolder, info.Name()), sourceType, itemsToMatch)
+			dataset = append(dataset, rawData...)
 		}
 	}
-	InsertDataToElastic(es, indexName, mapping, dataset)
+
+	if len(dataset) != 0 {
+		InsertDataToElastic(es, indexName, mapping, dataset, appendMode)
+	}
 }
 
-func InsertDataToElastic(es *elasticsearch.Client, indexName string, mapping string, articles []interface{}) {
+func InsertDataToElastic(es *elasticsearch.Client, indexName string, mapping string, articles []interface{}, appendMode bool) {
 	var (
 		res             *esapi.Response
 		err             error
@@ -101,30 +138,33 @@ func InsertDataToElastic(es *elasticsearch.Client, indexName string, mapping str
 	if err != nil {
 		log.Fatalf("Error creating the indexer: %s", err)
 	}
-	// Re-create the index
-	//
-	if res, err = es.Indices.Delete([]string{indexName}, es.Indices.Delete.WithIgnoreUnavailable(true)); err != nil || res.IsError() {
-		log.Fatalf("Cannot delete index: %s", err)
-	}
-	res.Body.Close()
-	res, err = es.Indices.Create(indexName)
-	if err != nil {
-		log.Fatalf("Cannot create index: %s", err)
-	}
-	if res.IsError() {
-		log.Fatalf("Cannot create index: %s", res)
-	}
-	res.Body.Close()
 
-	if mapping != "" {
-		res, err = es.Indices.PutMapping([]string{indexName}, strings.NewReader(mapping))
-		if err != nil {
-			log.Fatalf("Cannot update mapping: %s", err)
-		}
-		if res.IsError() {
-			log.Fatalf("Cannot update mapping: %s", res)
+	if !appendMode {
+		// Re-create the index
+		//
+		if res, err = es.Indices.Delete([]string{indexName}, es.Indices.Delete.WithIgnoreUnavailable(true)); err != nil || res.IsError() {
+			log.Fatalf("Cannot delete index: %s", err)
 		}
 		res.Body.Close()
+		res, err = es.Indices.Create(indexName)
+		if err != nil {
+			log.Fatalf("Cannot create index: %s", err)
+		}
+		if res.IsError() {
+			log.Fatalf("Cannot create index: %s", res)
+		}
+		res.Body.Close()
+
+		if mapping != "" {
+			res, err = es.Indices.PutMapping([]string{indexName}, strings.NewReader(mapping))
+			if err != nil {
+				log.Fatalf("Cannot update mapping: %s", err)
+			}
+			if res.IsError() {
+				log.Fatalf("Cannot update mapping: %s", res)
+			}
+			res.Body.Close()
+		}
 	}
 
 	start := time.Now().UTC()
@@ -262,8 +302,7 @@ func AddHeaderToCsv(inputFilePath string, outputFilePath string, header []string
 	}
 }
 
-func ConvertGdeltCsvToJson(csvFilePath string) []interface{} {
-	layout := "2006-01-02 15:04:05" // Defines the format
+func ConvertCsvToJson(csvFilePath string, sourceType SourceType, itemsToMatch map[string]bool) []interface{} {
 	csvFile, err := os.Open(csvFilePath)
 	if err != nil {
 		fmt.Println(err)
@@ -271,87 +310,376 @@ func ConvertGdeltCsvToJson(csvFilePath string) []interface{} {
 	defer csvFile.Close()
 
 	reader := csv.NewReader(csvFile)
-	csvData, err := reader.ReadAll()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
+	reader.FieldsPerRecord = -1
+	reader.LazyQuotes = true
 	data := make([]interface{}, 0)
 
-	for _, eachRow := range csvData[1:] {
-		row := make(map[string]interface{})
-
-		var actionLocation *GeoLocation
-		var actor1Location *GeoLocation
-		var actor2Location *GeoLocation
-		var location *GeoLocation
-		for i, header := range csvData[0] {
-			switch header {
-			case "LAT":
-				location = &GeoLocation{
-					Lat: eachRow[i],
-				}
-			case "LON":
-				location.Lon = eachRow[i]
-			case "latitude":
-				location = &GeoLocation{
-					Lat: eachRow[i],
-				}
-			case "longitude":
-				location.Lon = eachRow[i]
-			case "Actor1Geo_Lat":
-				actor1Location = &GeoLocation{
-					Lat: eachRow[i],
-				}
-			case "Actor1Geo_Long":
-				actor1Location.Lon = eachRow[i]
-			case "Actor2Geo_Lat":
-				actor2Location = &GeoLocation{
-					Lat: eachRow[i],
-				}
-			case "Actor2Geo_Long":
-				actor2Location.Lon = eachRow[i]
-			case "ActionGeo_Lat":
-				actionLocation = &GeoLocation{
-					Lat: eachRow[i],
-				}
-			case "ActionGeo_Long":
-				actionLocation.Lon = eachRow[i]
-			case "ACCESS_START", "ACCESS_END":
-				// Parse the time in UTC
-				parsedTime, err := time.ParseInLocation(layout, eachRow[i], time.UTC)
-				if err != nil {
-					continue
-				}
-				row[header] = parsedTime.AddDate(0, 11, 0)
-			case "timestamp":
-				epochInt, err := strconv.ParseInt(eachRow[i], 10, 64)
-				if err != nil {
-					log.Println("Error converting string to int64:", err)
-					continue
-				}
-
-				// Convert int64 to time.Time
-				t := time.Unix(epochInt, 0) // The second argument is nanoseconds, set to 0
-				row[header] = t
-			default:
-				row[header] = eachRow[i]
+	headers, err := reader.Read()
+	if err == io.EOF {
+		return nil
+	}
+	for {
+		r, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if sourceType == SourceTypeAIS {
+			if _, exist := itemsToMatch[r[0]]; !exist {
+				continue
 			}
 		}
-		if location != nil && location.isValid() {
-			row["location"] = location.ToGeoPointStr()
+
+		row := make(map[string]string)
+
+		for i, header := range headers {
+			row[header] = r[i]
 		}
-		if actionLocation != nil && actionLocation.isValid() {
-			row["ActionGeo_Location"] = actionLocation.ToGeoPointStr()
+
+		var raw map[string]interface{}
+		switch sourceType {
+		case SourceTypeSatelliteAccess:
+			raw = transformSatelliteDataToAsset(row)
+		case SourceTypeADSB:
+			raw = transformADSBData(row)
+		case SourceTypeACLED:
+			raw = transformAcledData(row)
+		case SourceTypeGDELTExport:
+			raw = transformGdeltExportData(row)
+		case SourceTypeAIS:
+			raw = transformAISDataToAsset(row)
+		default:
+			raw = make(map[string]interface{})
+			for k, v := range row {
+				raw[k] = v
+			}
 		}
-		if actor1Location != nil && actor1Location.isValid() {
-			row["Actor1Geo_Location"] = actor1Location.ToGeoPointStr()
+		//transform all row header to lower case and snake case
+		if raw != nil {
+			newMap := make(map[string]interface{})
+			for k, v := range raw {
+				fieldName := formatFieldName(k)
+				newMap[fieldName] = v
+			}
+			data = append(data, newMap)
 		}
-		if actor2Location != nil && actor2Location.isValid() {
-			row["Actor2Geo_Location"] = actor2Location.ToGeoPointStr()
+	}
+
+	//if ADSB data, we only have one day worth of data, copy and expand data to 30 days
+	if sourceType == SourceTypeADSB {
+		additionalData := make([]interface{}, 0)
+		for i := 1; i < 30; i++ {
+			for _, d := range data {
+				row := d.(map[string]interface{})
+				newData := make(map[string]interface{})
+				for k, v := range row {
+					newData[k] = v
+				}
+				t := newData["timestamp"].(time.Time)
+				newData["timestamp"] = t.AddDate(0, 0, i)
+				additionalData = append(additionalData, newData)
+			}
 		}
-		data = append(data, row)
+		data = append(data, additionalData...)
 	}
 	return data
+}
+
+func formatFieldName(input string) string {
+	formattedString := strings.ReplaceAll(input, " ", "_")
+	formattedString = strings.ReplaceAll(formattedString, "-", "_")
+	r := []rune(formattedString)
+	r[0] = unicode.ToLower(r[0])
+	return string(r)
+}
+
+func transformGdeltExportData(data map[string]string) map[string]interface{} {
+	var location *Location
+	output := make(map[string]interface{})
+	for k, v := range data {
+		output[k] = v
+	}
+
+	latStr, ok1 := data["Actor1Geo_Lat"]
+	lonStr, ok2 := data["Actor1Geo_Long"]
+	if ok1 && ok2 && latStr != "" && lonStr != "" {
+		lat, err := strconv.ParseFloat(latStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		lon, err := strconv.ParseFloat(lonStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		location = &Location{
+			Lat: lat,
+			Lon: lon,
+		}
+		output["actor1_location"] = location
+	}
+
+	latStr, ok1 = data["Actor2Geo_Lat"]
+	lonStr, ok2 = data["Actor2Geo_Long"]
+	if ok1 && ok2 && latStr != "" && lonStr != "" {
+		lat, err := strconv.ParseFloat(latStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		lon, err := strconv.ParseFloat(lonStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		location = &Location{
+			Lat: lat,
+			Lon: lon,
+		}
+		output["actor2_location"] = location
+	}
+
+	latStr, ok1 = data["ActionGeo_Lat"]
+	lonStr, ok2 = data["ActionGeo_Long"]
+	if ok1 && ok2 && latStr != "" && lonStr != "" {
+		lat, err := strconv.ParseFloat(latStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		lon, err := strconv.ParseFloat(lonStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		location = &Location{
+			Lat: lat,
+			Lon: lon,
+		}
+		output["action_location"] = location
+	}
+
+	return output
+}
+
+func transformAcledData(data map[string]string) map[string]interface{} {
+	var location *Location
+	output := make(map[string]interface{})
+	for k, v := range data {
+		output[k] = v
+	}
+
+	if startTime, ok := data["timestamp"]; ok {
+		epochInt, err := strconv.ParseInt(startTime, 10, 64)
+		if err != nil {
+			log.Println("Error converting string to int64:", err)
+		} else {
+			// Convert int64 to time.Time
+			t := time.Unix(epochInt, 0) // The second argument is nanoseconds, set to 0
+			output["timestamp"] = t
+		}
+	}
+
+	latStr, ok1 := data["latitude"]
+	lonStr, ok2 := data["longitude"]
+	if ok1 && ok2 {
+		lat, err := strconv.ParseFloat(latStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		lon, err := strconv.ParseFloat(lonStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		location = &Location{
+			Lat: lat,
+			Lon: lon,
+		}
+		output["location"] = location
+	}
+
+	return output
+}
+
+func transformADSBData(data map[string]string) map[string]interface{} {
+	var location *Location
+	var timestamp *time.Time
+	output := make(map[string]interface{})
+	for k, v := range data {
+		output[k] = v
+	}
+
+	if startTime, ok := data["Time"]; ok {
+		// Parse the time in UTC
+		parsedTime, err := time.Parse(time.RFC3339, startTime)
+		if err != nil {
+			log.Printf("error parsing Time as time: %v\n", err)
+		} else {
+			delete(output, "Time")
+			timestamp = &parsedTime
+		}
+	}
+
+	latStr, ok1 := data["Latitude"]
+	lonStr, ok2 := data["Longitude"]
+	if ok1 && ok2 {
+		lat, err := strconv.ParseFloat(latStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		lon, err := strconv.ParseFloat(lonStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		location = &Location{
+			Lat: lat,
+			Lon: lon,
+		}
+		output["location"] = location
+	}
+
+	if location != nil && timestamp != nil {
+		assetLocation := AssetLocation{
+			EntityID:   data["Hex"],
+			AssetType:  AssetTypeAircraft,
+			SourceType: SourceTypeADSB,
+			Location:   *location,
+			Timestamp:  *timestamp,
+		}
+		addAssetLocationFields(assetLocation, output)
+	}
+	return output
+}
+
+func transformSatelliteDataToAsset(data map[string]string) map[string]interface{} {
+	var location *Location
+	var timestamp *time.Time
+	output := make(map[string]interface{})
+	for k, v := range data {
+		output[k] = v
+	}
+
+	layout := "2006-01-02 15:04:05" // Defines the format
+	if startTime, ok := data["ACCESS_START"]; ok {
+		// Parse the time in UTC
+		parsedTime, err := time.ParseInLocation(layout, startTime, time.UTC)
+		if err != nil {
+			log.Printf("error parsing ACCESS_START as time: %v\n", err)
+		} else {
+			t := parsedTime.AddDate(0, 11, 0)
+			output["ACCESS_START"] = t
+			timestamp = &t
+		}
+	}
+	if endTime, ok := data["ACCESS_END"]; ok {
+		// Parse the time in UTC
+		parsedTime, err := time.ParseInLocation(layout, endTime, time.UTC)
+		if err != nil {
+			log.Printf("error parsing ACCESS_END as time: %v\n", err)
+		} else {
+			output["ACCESS_END"] = parsedTime.AddDate(0, 11, 0)
+		}
+	}
+	latStr, ok1 := data["LAT"]
+	lonStr, ok2 := data["LON"]
+	if ok1 && ok2 {
+		lat, err := strconv.ParseFloat(latStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		lon, err := strconv.ParseFloat(lonStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		location = &Location{
+			//shifting data to southern china sea area
+			Lat: lat,
+			Lon: lon + 287,
+		}
+		output["location"] = location
+	}
+
+	if location != nil && timestamp != nil {
+		assetLocation := AssetLocation{
+			EntityID:   data["SAT_NAME"],
+			AssetType:  AssetTypeSatellite,
+			SourceType: SourceTypeSatelliteAccess,
+			Location:   *location,
+			Timestamp:  *timestamp,
+		}
+		addAssetLocationFields(assetLocation, output)
+	}
+	return output
+}
+
+func transformAISDataToAsset(data map[string]string) map[string]interface{} {
+	var location *Location
+	var timestamp *time.Time
+	output := make(map[string]interface{})
+	for k, v := range data {
+		output[k] = v
+	}
+
+	if startTime, ok := data["timestamp"]; ok {
+		// Parse the given time string assuming it's in UTC
+		parsedTime, err := time.Parse("20060102T150405.000Z", startTime)
+		if err != nil {
+			log.Printf("error parsing Time as time: %v\n", err)
+		}
+
+		t := parsedTime.UTC()
+		//output["BaseDateTime"] = t
+		timestamp = &t
+	}
+
+	latStr, ok1 := data["lat"]
+	lonStr, ok2 := data["lon"]
+	if ok1 && ok2 {
+		lat, err := strconv.ParseFloat(latStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		lon, err := strconv.ParseFloat(lonStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+
+		location = &Location{
+			//shifting data to southern china sea area
+			Lat: lat,
+			Lon: lon,
+		}
+	}
+
+	if location != nil && timestamp != nil {
+		assetLocation := AssetLocation{
+			EntityID:   data["mmsi"],
+			AssetType:  AssetTypeVessel,
+			SourceType: SourceTypeAIS,
+			Location:   *location,
+			Timestamp:  *timestamp,
+		}
+		addAssetLocationFields(assetLocation, output)
+	}
+	return output
+}
+
+func inSouthChinaArea(lat float64, lon float64) bool {
+	return lat > 10 && lat < 20 && lon > 105 && lon < 135
+}
+
+func addAssetLocationFields(location AssetLocation, data map[string]interface{}) {
+	data["entityId"] = location.EntityID
+	data["assetType"] = location.AssetType
+	data["sourceType"] = location.SourceType
+	data["location"] = location.Location
+	data["timestamp"] = location.Timestamp
 }
