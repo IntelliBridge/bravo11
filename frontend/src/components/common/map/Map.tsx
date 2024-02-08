@@ -207,52 +207,10 @@ const planeSourceData: AnySourceData = {
 	},
 };
 
-const earthquakeLayer: DataLayer = {
-	name: "Earthquakes",
-	group: "OSINT",
-	type: "geojson",
-	timeWindow: 2592000000,
-	timeField: "",
-	locationField: "location",
-	url: "api endpoint for fetching earthquake data here",
-	layer: {
-		id: "earthquakes",
-		type: "heatmap",
-		source: "earthquakes",
-	},
-};
-
-const jsonifyEarthquake = async () => {
-	const earthquakeFile = await fetch("../conf/earthquakes.json");
-	const jsonEarthquake: JSON = await earthquakeFile.json();
-
-	return jsonEarthquake;
-};
-
-const earthquakeJSON = jsonifyEarthquake();
-
-const earthquakeSourceData: AnySourceData = {
-	type: "geojson",
-	data: earthquakeJSON,
-};
-
 interface SourceDataLookup {
 	key: string;
 	data: AnySourceData;
 }
-
-const dataLayers: DataLayer[] = [shipLayer, planeLayer, earthquakeLayer];
-const ciConeLayers: DataLayer[] = [shipCiLayer, planeCiLayer];
-const dataSources: SourceDataLookup[] = [
-	{
-		key: shipLayer.layer.id,
-		data: shipSourceData,
-	},
-	{
-		key: planeLayer.layer.id,
-		data: planeSourceData,
-	},
-];
 
 function Cop(props: CopProps) {
 	const timelineContainer = useRef(null);
@@ -268,6 +226,58 @@ function Cop(props: CopProps) {
 	const [playing, setPlaying] = useState(false);
 	const [time, setTime] = useState(moment().toISOString());
 	const [rate, setRate] = useState(1);
+	const [earthquakeData, setEarthquakeData] = useState("");
+
+	const earthquakeLayer: DataLayer = {
+		name: "Earthquakes",
+		group: "OSINT",
+		type: "geojson",
+		timeWindow: 2592000000,
+		timeField: "",
+		locationField: "location",
+		url: "api endpoint for fetching earthquake data here",
+		layer: {
+			id: "earthquakes",
+			type: "heatmap",
+			source: "earthquakes",
+		},
+	};
+
+	useEffect(() => {
+		const jsonifyEarthquake = async () => {
+			const earthquakeFile = await fetch("/conf/earthquakes.json");
+			console.log(earthquakeFile);
+			const jsonEarthquake: JSON = await earthquakeFile.json();
+			const stringEarthquake: string = JSON.stringify(jsonEarthquake);
+
+			setEarthquakeData(stringEarthquake);
+		};
+
+		jsonifyEarthquake();
+		console.log(earthquakeData);
+	});
+
+	let earthquakeSourceData: AnySourceData = {
+		type: "geojson",
+		data: earthquakeData,
+	};
+
+	const dataLayers: DataLayer[] = [shipLayer, planeLayer, earthquakeLayer];
+	const ciConeLayers: DataLayer[] = [shipCiLayer, planeCiLayer];
+	const dataSources: SourceDataLookup[] = [
+		{
+			key: shipLayer.layer.id,
+			data: shipSourceData,
+		},
+		{
+			key: planeLayer.layer.id,
+			data: planeSourceData,
+		},
+		{
+			key: earthquakeLayer.layer.id,
+			data: earthquakeSourceData,
+		},
+	];
 
 	// const [selectedTab, setSelectedTab] = useState("data");  // todo(myles) uncomment this
 	const [selectedTab, setSelectedTab] = useState("filter");
