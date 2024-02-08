@@ -53,8 +53,8 @@ type Detection struct {
 }
 
 func (d Detection) ToDocument() (string, DetectionDocument) {
-  return d.EntityId, DetectionDocument {
-    fmt.Sprintf("%s_%s", d.EntityId, d.DetectionTimestamp.Format(time.RFC3339)),
+  return fmt.Sprintf("%s_%s", d.EntityId, d.DetectionTimestamp.Format(time.RFC3339)), DetectionDocument {
+    d.EntityId,
     ElasticGeoPoint{
       Lat: d.DetectionLat,
       Lon: d.DetectionLon,
