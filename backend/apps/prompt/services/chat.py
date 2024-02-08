@@ -71,17 +71,17 @@ class ChatAgentService:
         return demo_ephemeral_chat_history
         
     #TODO: temporary uncomment
-    def invoke(self, prompt: str, messages: list[object] = []) -> Any:
-        chat_message = self._create_messages(messages)
-        agent_resp = self.agent.invoke({
-            "input": prompt,
-            "chat_history": chat_message.messages,
-        })
-        chat_message.add_user_message(prompt)
-        chat_message.add_ai_message(agent_resp["output"])
-        return agent_resp["output"]
+    # def invoke(self, prompt: str, messages: list[object] = []) -> Any:
+    #     chat_message = self._create_messages(messages)
+    #     agent_resp = self.agent.invoke({
+    #         "input": prompt,
+    #         "chat_history": chat_message.messages,
+    #     })
+    #     chat_message.add_user_message(prompt)
+    #     chat_message.add_ai_message(agent_resp["output"])
+    #     return agent_resp["output"]
     
     # TODO: temporary invoke method with no context or agents
-    # def invoke(self, prompt: str, messages: list[object] = []) -> Any:
+    def invoke(self, prompt: str, messages: list[object] = []) -> Any:
 
-    #     return self.model.invoke(prompt)
+        return self.model.invoke(prompt)
