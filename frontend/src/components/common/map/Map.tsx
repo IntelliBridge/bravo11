@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import moment, { Moment } from "moment";
 import {
   Timeline,
@@ -61,181 +61,13 @@ function Cop(props: CopProps) {
   const [selectedTab, setSelectedTab] = useState("data");
   const [modalOpen, setModalOpen] = useState(true);
 
-  const loadLayer = async (dataLayer: DataLayer, t: Moment) => {
-    if (dataLayer.type === "geojson") {
-      // const response = await fetch(getGeojsonURL(dataLayer, t));
-      // const features = await response.json();
-      // console.log(features);
-      // @ts-ignore
-      // map.current?.getMap().getSource(dataLayer.name).setData(features);
-      // map.current?.getMap().getSource(dataLayer.name).setData(geoJson);
-    }
-  };
-
   const [bounds, setBounds] = useState<BoundingBox>(); // don't use this for now lmao
   const { data: boundingData } = useBoundingData("/mock/some-data.json");
   const { data: boundingDataSource } = useGeoTransform(boundingData);
 
-  useEffect(() => {
-    console.log(boundingDataSource);
-  }, [boundingDataSource]);
-
-  // useEffect(() => {
-  //   dataLayers.forEach((layer: DataLayer) => {
-  //     const layerOnMap =
-  //       map.current?.getMap().getLayer(layer.layer.id) !== undefined;
-  //     var ciLayer = ciConeLayers.find((s) => s.layer.source === layer.layer.id);
-  //     if (layerOnMap && !layers.includes(layer.layer.id)) {
-  //       map.current?.getMap().removeLayer(layer.layer.id);
-  //       if (ciLayer) {
-  //         map.current?.getMap().removeLayer(ciLayer.layer.id);
-  //       }
-  //       map.current?.getMap().removeSource(layer.layer.id);
-  //     }
-  //
-  //     var data = dataSources.find((s) => s.key === layer.layer.id);
-  //     if (
-  //       !layerOnMap &&
-  //       layers.includes(layer.layer.id) &&
-  //       data !== undefined
-  //     ) {
-  //       map.current?.getMap().addSource(layer.layer.id, data.data);
-  //       map.current?.getMap().addLayer(layer.layer);
-  //       // get ci data
-  //       if (ciLayer) {
-  //         map.current?.getMap().addLayer(ciLayer.layer);
-  //       }
-  //
-  //       map.current
-  //         ?.getMap()
-  //         .flyTo({ center: [INITIAL_LONG + 5, INITIAL_LAT + 5], zoom: 4 });
-  //     }
-  //   });
-  // }, [layers, baseLoading]);
-
-  // useEffect(() => {
-  //   props.dataLayers.forEach((dataLayer: DataLayer) => {
-  //     const layerOnMap =
-  //       map.current?.getMap().getLayer(dataLayer.name) !== undefined;
-  //
-  //     if (layerOnMap && !layers.includes(dataLayer.name)) {
-  //       map.current?.getMap().removeLayer(dataLayer.name);
-  //       map.current?.getMap().removeSource(dataLayer.name);
-  //     }
-  //
-  //     if (!layerOnMap && layers.includes(dataLayer.name)) {
-  //       if (currentTime.current === null) {
-  //         return;
-  //       }
-  //
-  //       if (dataLayer.type === "vector") {
-  //         map.current?.getMap().addSource(dataLayer.name, {
-  //           type: "vector",
-  //           tiles: [getVectorURL(dataLayer, currentTime.current)],
-  //           minzoom: 0,
-  //           maxzoom: 24,
-  //           promoteId: "_id",
-  //         });
-  //       } else if (dataLayer.type === "geojson") {
-  //         map.current?.getMap().addSource(dataLayer.name, {
-  //           type: "geojson",
-  //           data: getGeojsonURL(dataLayer, currentTime.current),
-  //           promoteId: "_id",
-  //         });
-  //       }
-  //
-  //       map.current?.getMap().addLayer(dataLayer.layer);
-  //
-  //       if (dataLayer.type === "vector") {
-  //         map.current?.on("mousemove", dataLayer.name, (event) => {
-  //           if (map.current == null) return;
-  //
-  //           map.current.getCanvas().style.cursor = "pointer";
-  //
-  //           // Check whether features exist
-  //           if (event.features === undefined || event.features.length === 0)
-  //             return;
-  //
-  //           if (hover.current !== null && hoverLayer.current !== null) {
-  //             map.current.removeFeatureState({
-  //               source: hoverLayer.current,
-  //               id: hover.current,
-  //               sourceLayer: "hits",
-  //             });
-  //           }
-  //
-  //           const id = event.features[0].id;
-  //
-  //           if (id !== undefined) {
-  //             hover.current = id as number;
-  //             hoverLayer.current = dataLayer.name;
-  //
-  //             map.current.setFeatureState(
-  //               {
-  //                 source: hoverLayer.current,
-  //                 id: hover.current,
-  //                 sourceLayer: "hits",
-  //               },
-  //               {
-  //                 hover: true,
-  //               }
-  //             );
-  //           }
-  //         });
-  //
-  //         map.current?.on("mouseleave", dataLayer.name, function () {
-  //           if (map.current == null) return;
-  //
-  //           map.current.getCanvas().style.cursor = "";
-  //
-  //           if (hover.current !== null && hoverLayer.current !== null) {
-  //             map.current.setFeatureState(
-  //               {
-  //                 source: hoverLayer.current,
-  //                 id: hover.current,
-  //                 sourceLayer: "hits",
-  //               },
-  //               { hover: false }
-  //             );
-  //           }
-  //           hover.current = null;
-  //         });
-  //       }
-  //
-  //       map.current?.on("click", dataLayer.name, async (event) => {
-  //         if (map.current == null) return;
-  //
-  //         // Check whether features exist
-  //         if (event.features === undefined || event.features.length === 0)
-  //           return;
-  //
-  //         const f = event.features[0];
-  //         if (f.properties !== null) {
-  //           const response = await fetch(
-  //             `/api/info/${f.properties._index}/_doc/${f.properties._id}`
-  //           );
-  //           const feature = await response.json();
-  //           setFeature(feature);
-  //         }
-  //       });
-  //     }
-  //   });
-  // }, [layers, baseLoading, props.dataLayers]);
-
   const throttleFunc = throttle(1000, (t) => {
     currentTime.current = moment(t.time);
     setTime(t.time.toISOString());
-
-    const currentLayers = map.current?.getMap().getStyle().layers;
-    currentLayers?.forEach((layer) => {
-      const dataLayer = props.dataLayers.find(
-        (d: DataLayer) => d.name === layer.id
-      );
-
-      if (dataLayer) {
-        loadLayer(dataLayer, t.time);
-      }
-    });
   });
 
   const goLive = () => {
@@ -343,6 +175,7 @@ function Cop(props: CopProps) {
     });
   }, [props.dataLayers]);
 
+  // ===================================================================== TABS 
   const dataLayerTab = (
     <>
       <H5 style={{ marginBottom: 20 }}>Data Layers</H5>
@@ -392,6 +225,7 @@ function Cop(props: CopProps) {
 
   const chatTab = <Chat />;
 
+  // ================================================================== TIMEBAR 
   const timebar = (
     <div
       style={{
@@ -490,6 +324,8 @@ function Cop(props: CopProps) {
     const current = map.current?.getMap();
     if (!current || !boundingDataSource) return;
   }, []);
+  
+  const points = useMemo(() => {}, [])
 
   return (
     <div
@@ -516,24 +352,28 @@ function Cop(props: CopProps) {
         }}
         initialViewState={{ latitude: 0, longitude: 0, zoom: 4 }}
       >
-        <Marker latitude={0} longitude={0}></Marker>
-        {/* {boundingDataSource && */}
-        {/*   boundingDataSource.features.map((f, i) => { */}
-        {/*     if (f.geometry.type === "Point") { */}
-        {/*       console.log("writing point", f.geometry.coordinates); // deleteme(myles) */}
-        {/*       return ( */}
-        {/*         <Marker */}
-        {/*           key={i} */}
-        {/*           // latitude={f.geometry.coordinates.at(0) || 0} */}
-        {/*           // longitude={f.geometry.coordinates.at(1) || 0} */}
-        {/*           latitude={0} */}
-        {/*           longitude={0} */}
-        {/*         /> */}
-        {/*       ); */}
-        {/*     } else { */}
-        {/*       return null; */}
-        {/*     } */}
-        {/*   })} */}
+        {boundingDataSource &&
+          boundingDataSource.features.map((f, i) => {
+            if (f.geometry.type === "Point") {
+              console.log("writing point", f.geometry.coordinates); // deleteme(myles)
+              return (
+                <Marker
+                  key={i}
+                  latitude={f.geometry.coordinates.at(0) || 0}
+                  longitude={f.geometry.coordinates.at(1) || 0}
+                  anchor="center"
+                >
+                  <img
+                    src="/markers/sat.png"
+                    alt="ship"
+                    style={{ height: "25%", width: "25%" }}
+                  />
+                </Marker>
+              );
+            } else {
+              return null;
+            }
+          })}
       </Map>
       {timebar}
       <div

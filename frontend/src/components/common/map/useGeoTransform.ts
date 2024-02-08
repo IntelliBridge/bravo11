@@ -1,7 +1,6 @@
 import { useMemo, } from "react";
 import { estypes } from "@elastic/elasticsearch";
 
-// note(myles) we expect an
 export default function useGeoTransform(elasticHits?: estypes.SearchHit[]) {
   const data = useMemo(() => {
     if (!elasticHits || elasticHits?.length === 0) return;
