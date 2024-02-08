@@ -74,6 +74,18 @@ func TestInsertInfraData(t *testing.T) {
 	InsertCSVDataToElastic(client, "infra", INFRA_MAPPING, inputFolder)
 }
 
+func TestInsertNatoRedBlueData(t *testing.T) {
+	inputFolder := "../../data/nato_red_blue"
+	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
+	InsertCSVDataToElastic(client, "nato-red-blue", "", inputFolder)
+}
+
+func TestInsertCountryAssessmentData(t *testing.T) {
+	inputFolder := "../../data/country_assessment"
+	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
+	InsertCSVDataToElastic(client, "country-assessment", "", inputFolder)
+}
+
 //func TestRetrieveData(t *testing.T) {
 //	//https://elastic:UGr00p!@udp-stage-api.ugroup.io
 //	client := CreateClient([]string{"https://udp-stage-api.ugroup.io"}, "elastic", "UGr00p!")

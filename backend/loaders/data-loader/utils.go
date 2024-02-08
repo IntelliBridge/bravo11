@@ -340,7 +340,7 @@ func ConvertGdeltCsvToJson(csvFilePath string) []interface{} {
 			}
 		}
 		if location != nil && location.isValid() {
-			row["Lat_Lon"] = location.ToGeoPointStr()
+			row["location"] = location.ToGeoPointStr()
 		}
 		if actionLocation != nil && actionLocation.isValid() {
 			row["ActionGeo_Location"] = actionLocation.ToGeoPointStr()

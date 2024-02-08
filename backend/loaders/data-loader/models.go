@@ -27,7 +27,7 @@ const INFRA_MAPPING = `
 const ACLED_MAPPING = `
 {
     "properties": {
-      "Lat_Lon": {
+      "location": {
         "type": "geo_point"
       },
       "timestamp": {
@@ -40,7 +40,7 @@ const ACLED_MAPPING = `
 const SATELLITE_MAPPING = `
 {
     "properties": {
-      "Lat_Lon": {
+      "location": {
         "type": "geo_point"
       },
       "ACCESS_START": {
