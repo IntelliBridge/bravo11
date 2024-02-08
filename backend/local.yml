@@ -18,7 +18,7 @@ services:
     depends_on:
       - postgres
       - redis
-      - es01
+      # - es01
     volumes:
       - .:/app:z
     env_file:
@@ -45,60 +45,60 @@ services:
     image: docker.io/redis:6
     container_name: bravo11_local_redis
 
-  es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
-    labels:
-      co.elastic.logs/module: elasticsearch
-    volumes:
-      - esdata01:/usr/share/elasticsearch/data
-    ports:
-      - 9200:9200
-    environment:
-      - node.name=es01
-      - cluster.name=docker-cluster
-      - discovery.type=single-node
-      - ELASTIC_PASSWORD=changeme
-      - bootstrap.memory_lock=true
-      - xpack.security.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl http://localhost:9200",
-        ]
-      interval: 10s
-      timeout: 10s
-      retries: 120
+  # es01:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
+  #   labels:
+  #     co.elastic.logs/module: elasticsearch
+  #   volumes:
+  #     - esdata01:/usr/share/elasticsearch/data
+  #   ports:
+  #     - 9200:9200
+  #   environment:
+  #     - node.name=es01
+  #     - cluster.name=docker-cluster
+  #     - discovery.type=single-node
+  #     - ELASTIC_PASSWORD=changeme
+  #     - bootstrap.memory_lock=true
+  #     - xpack.security.enabled=false
+  #     - xpack.security.http.ssl.enabled=false
+  #     - xpack.security.transport.ssl.enabled=false
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #   healthcheck:
+  #     test:
+  #       [
+  #         "CMD-SHELL",
+  #         "curl http://localhost:9200",
+  #       ]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 120
 
 
-  kibana:
-    depends_on:
-      es01:
-        condition: service_healthy
-    image: docker.elastic.co/kibana/kibana:8.7.1
-    labels:
-      co.elastic.logs/module: kibana
-    volumes:
-      - kibanadata:/usr/share/kibana/data
-    ports:
-      - 5601:5601
-    environment:
-      - SERVERNAME=kibana
-      - ELASTICSEARCH_HOSTS=http://es01:9200
-      - ELASTICSEARCH_USERNAME=kibana_system
-      - ELASTICSEARCH_PASSWORD=changeme
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl http://localhost:5601",
-        ]
-      interval: 10s
-      timeout: 10s
-      retries: 120
+  # kibana:
+  #   depends_on:
+  #     es01:
+  #       condition: service_healthy
+  #   image: docker.elastic.co/kibana/kibana:8.7.1
+  #   labels:
+  #     co.elastic.logs/module: kibana
+  #   volumes:
+  #     - kibanadata:/usr/share/kibana/data
+  #   ports:
+  #     - 5601:5601
+  #   environment:
+  #     - SERVERNAME=kibana
+  #     - ELASTICSEARCH_HOSTS=http://es01:9200
+  #     - ELASTICSEARCH_USERNAME=kibana_system
+  #     - ELASTICSEARCH_PASSWORD=changeme
+  #   healthcheck:
+  #     test:
+  #       [
+  #         "CMD-SHELL",
+  #         "curl http://localhost:5601",
+  #       ]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 120

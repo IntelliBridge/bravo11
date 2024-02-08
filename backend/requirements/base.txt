@@ -28,5 +28,10 @@ langchain-community==0.0.18
 
 # boto
 boto3==1.34.36
+
+# lc
 langchainhub==0.1.14
 langgraph==0.0.23
+
+#es
+elasticsearch_dsl==8.12.0
