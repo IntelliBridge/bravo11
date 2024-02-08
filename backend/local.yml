@@ -18,7 +18,7 @@ services:
     depends_on:
       - postgres
       - redis
-      # - es01
+      - es01
     volumes:
       - .:/app:z
     env_file:
