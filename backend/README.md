@@ -7,6 +7,18 @@ Behold My Awesome Project!
 
 License: MIT
 
+## local setup
+1. Add the following env vars to `./.envs/.local/.aws` with your env keys
+```
+AWS_ACCESS_KEY=
+AWS_SECRET_KEY=
+```
+
+2. Build and start docker
+```
+docker compose -f local.yml up --build
+```
+
 ## Settings
 
 Moved to [settings](http://cookiecutter-django.readthedocs.io/en/latest/settings.html).

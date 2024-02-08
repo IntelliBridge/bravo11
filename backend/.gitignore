@@ -279,4 +279,5 @@ bravo11/media/
 .ipython/
 .env
 .envs/*
-!.envs/.local/
+!.envs/.local/.django
+!.envs/.local/.postgres
