@@ -2,3 +2,4 @@
 # Intellij IDE
 .idea
 target/
+node_modules
