@@ -17,3 +17,13 @@ type AssetLocation struct {
   Location ElasticGeoPoint `json:"location"`
   Timestamp time.Time `json:"timestamp"`
 }
+
+const AssetLocationSchemaOverrides = `
+{
+  "properties": {
+    "location": {
+      "type": "geo_point"
+    }
+  }
+}
+`

@@ -1,21 +1,23 @@
 package commands
 
 import (
+  "bytes"
   "context"
-  "crypto/tls"
   "encoding/csv"
+  "encoding/json"
   "io"
+  "log"
   "log/slog"
-  "net/http"
   "os"
+  "runtime"
   "strconv"
   "strings"
+  "sync/atomic"
   "time"
 
+  "github.com/elastic/go-elasticsearch/v8"
+  "github.com/elastic/go-elasticsearch/v8/esutil"
   "github.com/spf13/cobra"
-  "github.com/opensearch-project/opensearch-go/v3"
-  "github.com/opensearch-project/opensearch-go/v3/opensearchapi"
-  "github.com/opensearch-project/opensearch-go/v3/opensearchutil"
 
   "load-data/models"
   "load-data/util"
@@ -31,7 +33,14 @@ func init() {
   LoadSatDetectionsCmd.Flags().String("asset-index", "", "The index to write asset documents to")
 
   LoadSatDetectionsCmd.Flags().BoolP("create-index", "c", false, "Create the index in ElasticSearch")
+
+  LoadSatDetectionsCmd.Flags().Bool("bulk", false, "Use the ElasticSearch bulk indexer")
 }
+
+const (
+	flushBytes int = 5e+6 //Flush threshold in bytes
+)
+
 
 var LoadSatDetectionsCmd = &cobra.Command{
   Use: "load-sat-detections [--file|-f <path>|-] [--index|-i <index_name>] [--create-index] [--skip-header]",
@@ -64,22 +73,20 @@ var LoadSatDetectionsCmd = &cobra.Command{
       }
     }
 
-    osClient, err := opensearchapi.NewClient(
-      opensearchapi.Config{
-         Client: opensearch.Config{
-           Transport: &http.Transport{
-            TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-           },
-           Addresses: []string{
-             util.GetEnv("OPENSEARCH_URL", "http://localhost:9200"),
-           },
-           Username:  "admin", // For testing only. Don't store credentials in code.
-           Password:  "admin",
-         },
-      },
+    var (
+      clusterURLs = util.GetEnv("ELASTIC_CLUSTER_URLS", "http://localhost:9200") //comma separated
+      username = util.GetEnv("ELASTIC_USERNAME", "admin")
+      password = util.GetEnv("ELASTIC_PASSWORD", "admin")
     )
+
+    esClient, err := elasticsearch.NewClient(elasticsearch.Config{
+       Addresses: strings.Split(clusterURLs, ","),
+       Username: username,
+       Password: password,
+    })
     if err != nil {
       slog.Error("Unable to instantiate ElasticSearch client " + err.Error())
+      return
     }
 
     ctx := context.Background()
@@ -89,34 +96,59 @@ var LoadSatDetectionsCmd = &cobra.Command{
     writeAssetIndex := len(assetIndexName) > 0
     createIndex := baseCmd.BoolFlagVal("create-index")
     if createIndex {
-      settings := strings.NewReader(`{
-        "settings": {
-          "index": {
-            "number_of_shards": 1,
-            "number_of_replicas": 0
-          }
-        }
-      }`)
-      _, err := osClient.Indices.Create(ctx, opensearchapi.IndicesCreateReq{
-        Index: indexName,
-        Body: settings,
-        Params: opensearchapi.IndicesCreateParams{},
-      })
+      _, err := esClient.Indices.Create(indexName)
       if err != nil {
         slog.Warn("Error creating index: " + err.Error())
       }
 
       if writeAssetIndex {
-        _, err := osClient.Indices.Create(ctx, opensearchapi.IndicesCreateReq{
-          Index: assetIndexName,
-          Body: settings,
-          Params: opensearchapi.IndicesCreateParams{},
-        })
+        _, err := esClient.Indices.Create(assetIndexName)
         if err != nil {
           slog.Warn("Error creating index: " + err.Error())
         }
       }
     }
+
+    _, err = esClient.Indices.PutMapping([]string { indexName }, strings.NewReader(models.DetectionSchemaOverrides))
+    if err != nil {
+      slog.Warn("Error updating detections index schema: " + err.Error())
+    }
+
+    if writeAssetIndex {
+      _, err = esClient.Indices.PutMapping([]string { assetIndexName }, strings.NewReader(models.AssetLocationSchemaOverrides))
+      if err != nil {
+        slog.Warn("Error updating asset location index schema: " + err.Error())
+      }
+    }
+
+    bulk := baseCmd.BoolFlagVal("bulk")
+    var detectionIndexer esutil.BulkIndexer = nil
+    var assetIndexer esutil.BulkIndexer = nil
+    if bulk {
+      detectionIndexer, err = esutil.NewBulkIndexer(esutil.BulkIndexerConfig{
+        Index: indexName, // The default index name
+        Client: esClient, // The Elasticsearch client
+        NumWorkers: runtime.NumCPU(), // The number of worker goroutines
+        FlushBytes: int(flushBytes), // The flush threshold in bytes
+        FlushInterval: 30 * time.Second, // The periodic flush interval
+      })
+      if err != nil {
+        log.Fatalf("Error creating the indexer: %s", err)
+      }
+
+      if writeAssetIndex {
+        assetIndexer, err = esutil.NewBulkIndexer(esutil.BulkIndexerConfig{
+          Index: assetIndexName, // The default index name
+          Client: esClient, // The Elasticsearch client
+          NumWorkers: runtime.NumCPU(), // The number of worker goroutines
+          FlushBytes: int(flushBytes), // The flush threshold in bytes
+          FlushInterval: 30 * time.Second, // The periodic flush interval
+        })
+      }
+    }
+
+    var countSuccessful uint64
+    var countSuccessfulAssets uint64
 
     for {
       row, err := reader.Read()
@@ -137,13 +169,13 @@ var LoadSatDetectionsCmd = &cobra.Command{
       poly, err := util.ParseDetectionPoints(row[11])
       if err != nil {
         slog.Error("Error reading polygon: " + err.Error())
-        continue;
+        continue
       }
 
       uuids, err := util.ParseArray[string](row[20])
       if err != nil {
         slog.Error("Error reading uuids: " + err.Error())
-        continue;
+        continue
       }
 
       lat, err := strconv.ParseFloat(row[1], 64)
@@ -193,15 +225,41 @@ var LoadSatDetectionsCmd = &cobra.Command{
 
       id, document := record.ToDocument()
 
-      _, err = osClient.Index(
-        ctx,
-        opensearchapi.IndexReq{
-          Index: indexName,
-          DocumentID: id,
-          Body: opensearchutil.NewJSONReader(&document),
-      })
+      data, err := json.Marshal(document)
+      if err != nil {
+         slog.Error("Error serializing document: " + err.Error())
+         continue
+      }
+
+      if bulk {
+        err = detectionIndexer.Add(
+          ctx,
+          esutil.BulkIndexerItem{
+				    Action: "index",
+            DocumentID: id,
+            Body: bytes.NewReader(data),
+
+            OnSuccess: func(ctx context.Context, item esutil.BulkIndexerItem, res esutil.BulkIndexerResponseItem) {
+              atomic.AddUint64(&countSuccessful, 1)
+            },
+
+            OnFailure: func(ctx context.Context, item esutil.BulkIndexerItem, res esutil.BulkIndexerResponseItem, err error) {
+              if err != nil {
+                 slog.Error("Error indexing document:" + err.Error())
+              } else {
+                 slog.Error("Error indexing document", "ErrorType", res.Error.Type, "ErrorReason", res.Error.Reason)
+              }
+            },
+        })
+      } else {
+        _, err = esClient.Index(
+          indexName,
+          bytes.NewReader(data),
+        )
+      }
       if err != nil {
         slog.Error("Error indexing Detection: " + err.Error())
+        continue
       }
 
       if writeAssetIndex {
@@ -212,17 +270,70 @@ var LoadSatDetectionsCmd = &cobra.Command{
           SourceType: models.SatelliteDetection,
           Timestamp: document.Timestamp,
         }
-        _, err = osClient.Index(
-          ctx,
-          opensearchapi.IndexReq{
-            Index: assetIndexName,
-            DocumentID: id,
-            Body: opensearchutil.NewJSONReader(&asset),
-        })
+        data, err = json.Marshal(asset)
+        if err != nil {
+           slog.Error("Error serializing asset document: " + err.Error())
+           continue
+        }
+        if bulk {
+          err = assetIndexer.Add(
+            ctx,
+            esutil.BulkIndexerItem{
+              Action: "index",
+              DocumentID: id,
+              Body: bytes.NewReader(data),
+
+              OnSuccess: func(ctx context.Context, item esutil.BulkIndexerItem, res esutil.BulkIndexerResponseItem) {
+                atomic.AddUint64(&countSuccessfulAssets, 1)
+              },
+
+              OnFailure: func(ctx context.Context, item esutil.BulkIndexerItem, res esutil.BulkIndexerResponseItem, err error) {
+                if err != nil {
+                   slog.Error("Error indexing document:" + err.Error())
+                } else {
+                   slog.Error("Error indexing document", "ErrorType", res.Error.Type, "ErrorReason", res.Error.Reason)
+                }
+              },
+          })
+        } else {
+          _, err = esClient.Index(
+            assetIndexName,
+            bytes.NewReader(data),
+          )
+        }
+
         if err != nil {
           slog.Error("Error indexing Detection: " + err.Error())
         }
       }
+    }
+
+    if bulk {
+      err = detectionIndexer.Close(ctx)
+      if err != nil {
+        slog.Warn("Unexpected error closing indexer: " + err.Error())
+      }
+
+      if writeAssetIndex {
+        err = assetIndexer.Close(ctx)
+        if err != nil {
+          slog.Warn("Unexpected error closing indexer: " + err.Error())
+        }
+      }
+
+      stats := detectionIndexer.Stats()
+      if stats.NumFailed > 0 {
+    		log.Fatalf(
+    			"Indexed [%d] documents with [%d] errors",
+    			int32(stats.NumFlushed),
+    			int32(stats.NumFailed),
+    		)
+    	} else {
+    		log.Printf(
+    			"Sucessfuly indexed [%d] documents",
+    			int32(stats.NumFlushed),
+    		)
+    	}
     }
   },
 }

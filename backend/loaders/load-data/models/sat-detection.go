@@ -69,7 +69,7 @@ func (d Detection) ToDocument() (string, DetectionDocument) {
     d.DetectionAlgorithmName,
     ElasticGeoShape{
       ShapeType: "polygon",
-      Coordinates: ToCoordinates(d.DetectionPolygon),
+      Coordinates: [1][][2]float64 { ToCoordinates(d.DetectionPolygon) },
     },
     d.BasConfidenceLabel,
     d.DetectionSourceImageId,
@@ -102,7 +102,6 @@ func VertexEqual(v1 [2]float64, v2 [2]float64) bool {
   return v1[0] == v2[0] && v1[1] == v2[1]
 }
 
-
 type ElasticGeoPoint struct {
   Lat float64 `json:"lat"`
   Lon float64 `json:"lon"`
@@ -110,7 +109,7 @@ type ElasticGeoPoint struct {
 
 type ElasticGeoShape struct {
   ShapeType string `json:"type"`
-  Coordinates [][2]float64 `json:"coordinates"`
+  Coordinates [1][][2]float64 `json:"coordinates"`
 }
 
 type DetectionDocument struct {
@@ -136,3 +135,16 @@ type DetectionDocument struct {
   NaiUuids []string `json:"naiUuids"`
   ImageUrl string `json:"imageUrl"`
 }
+
+const DetectionSchemaOverrides = `
+{
+  "properties": {
+    "location": {
+      "type": "geo_point"
+    },
+    "polygon": {
+      "type": "geo_shape"
+    }
+  }
+}
+`
