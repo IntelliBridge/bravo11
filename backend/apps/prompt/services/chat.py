@@ -64,9 +64,9 @@ class ChatAgentService:
 
         for message in messages:
             if message["type"] == MessageType.user:
-                demo_ephemeral_chat_history.add_user_message(message["messages"])
+                demo_ephemeral_chat_history.add_user_message(message["message"])
             else:
-                demo_ephemeral_chat_history.add_ai_message(message["messages"])
+                demo_ephemeral_chat_history.add_ai_message(message["message"])
 
         return demo_ephemeral_chat_history
         
