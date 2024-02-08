@@ -226,7 +226,8 @@ function Cop(props: CopProps) {
 	const [playing, setPlaying] = useState(false);
 	const [time, setTime] = useState(moment().toISOString());
 	const [rate, setRate] = useState(1);
-	const [earthquakeData, setEarthquakeData] = useState("");
+	const [earthquakeData, setEarthquakeData] = useState({} as string);
+	const [AISData, setAISData] = useState({} as string);
 
 	const earthquakeLayer: DataLayer = {
 		name: "Earthquakes",
@@ -240,29 +241,85 @@ function Cop(props: CopProps) {
 			id: "earthquakes",
 			type: "heatmap",
 			source: "earthquakes",
+			maxzoom: 9,
+			paint: {
+				// Increase the heatmap weight based on frequency and property magnitude
+				"heatmap-weight": ["interpolate", ["linear"], ["get", "mag"], 0, 0, 6, 1],
+				// Increase the heatmap color weight weight by zoom level
+				// heatmap-intensity is a multiplier on top of heatmap-weight
+				"heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 9, 3],
+				// Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
+				// Begin color ramp at 0-stop with a 0-transparancy color
+				// to create a blur-like effect.
+				"heatmap-color": [
+					"interpolate",
+					["linear"],
+					["heatmap-density"],
+					0,
+					"rgba(33,102,172,0)",
+					0.2,
+					"rgb(103,169,207)",
+					0.4,
+					"rgb(209,229,240)",
+					0.6,
+					"rgb(253,219,199)",
+					0.8,
+					"rgb(239,138,98)",
+					1,
+					"rgb(178,24,43)",
+				],
+				// Adjust the heatmap radius by zoom level
+				"heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 2, 9, 20],
+				// Transition from heatmap to circle layer by zoom level
+				"heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 1, 9, 0],
+			},
+		},
+	};
+
+	const AISLayer: DataLayer = {
+		name: "AIS Data",
+		group: "OSINT",
+		type: "geojson",
+		timeWindow: 2592000000,
+		timeField: "",
+		locationField: "location",
+		url: "api endpoint for fetching AIS data here",
+		layer: {
+			id: "AISData",
+			type: "circle",
+			source: "AISData",
+			paint: {
+				"circle-radius": 5,
+				"circle-color": "#FF007F",
+			},
 		},
 	};
 
 	useEffect(() => {
-		const jsonifyEarthquake = async () => {
-			const earthquakeFile = await fetch("/conf/earthquakes.json");
-			console.log(earthquakeFile);
-			const jsonEarthquake: JSON = await earthquakeFile.json();
-			const stringEarthquake: string = JSON.stringify(jsonEarthquake);
+		const jsonifyFile = async (jsonSource: string, setter: any) => {
+			const file = await fetch(jsonSource);
+			const json = await file.json();
 
-			setEarthquakeData(stringEarthquake);
+			setter(json);
 		};
 
-		jsonifyEarthquake();
+		jsonifyFile("/conf/earthquakes.geojson", setEarthquakeData);
 		console.log(earthquakeData);
-	});
+		jsonifyFile("/conf/2023_12_14.geojson", setAISData);
+		console.log(AISData);
+	}, []);
 
 	let earthquakeSourceData: AnySourceData = {
 		type: "geojson",
 		data: earthquakeData,
 	};
 
-	const dataLayers: DataLayer[] = [shipLayer, planeLayer, earthquakeLayer];
+	let AISSourceData: AnySourceData = {
+		type: "geojson",
+		data: AISData,
+	};
+
+	const dataLayers: DataLayer[] = [shipLayer, planeLayer, earthquakeLayer, AISLayer];
 	const ciConeLayers: DataLayer[] = [shipCiLayer, planeCiLayer];
 	const dataSources: SourceDataLookup[] = [
 		{
@@ -276,6 +333,10 @@ function Cop(props: CopProps) {
 		{
 			key: earthquakeLayer.layer.id,
 			data: earthquakeSourceData,
+		},
+		{
+			key: AISLayer.layer.id,
+			data: AISSourceData,
 		},
 	];
 
