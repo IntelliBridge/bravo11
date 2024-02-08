@@ -16,29 +16,29 @@ services:
     image: bravo11_local_django
     container_name: bravo11_local_django
     depends_on:
-#      - postgres
-#      - redis
+      - postgres
       - es01
     volumes:
       - .:/app:z
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
+      - ./.envs/.local/.aws
     ports:
       - '8000:8000'
     command: /start
 
-#  postgres:
-#    build:
-#      context: .
-#      dockerfile: ./compose/production/postgres/Dockerfile
-#    image: bravo11_production_postgres
-#    container_name: bravo11_local_postgres
-#    volumes:
-#      - bravo11_local_postgres_data:/var/lib/postgresql/data
-#      - bravo11_local_postgres_data_backups:/backups
-#    env_file:
-#      - ./.envs/.local/.postgres
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: bravo11_production_postgres
+    container_name: bravo11_local_postgres
+    volumes:
+      - bravo11_local_postgres_data:/var/lib/postgresql/data
+      - bravo11_local_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.local/.postgres
 
 #  docs:
 #    image: bravo11_local_docs
@@ -137,12 +137,3 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
-
-
-#  flower:
-#    <<: *django
-#    image: bravo11_local_flower
-#    container_name: bravo11_local_flower
-#    ports:
-#      - '5555:5555'
-#    command: /start-flower
