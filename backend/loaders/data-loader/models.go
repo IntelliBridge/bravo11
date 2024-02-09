@@ -123,13 +123,290 @@ const ASSET_MAPPING = `
 }
 `
 
+const COUNTRY_ASSESSMENT_MAPPING = `
+{
+  "properties": {
+      "Abbreviation": {
+        "type": "keyword"
+      },
+      "Agricultural Land (%)": {
+        "type": "keyword"
+      },
+      "Area": {
+        "type": "keyword"
+      },
+      "Armed Forces Size": {
+        "type": "keyword"
+      },
+      "Birth Rate": {
+        "type": "double"
+      },
+      "Calling Code": {
+        "type": "long"
+      },
+      "Capital/Major City": {
+        "type": "keyword"
+      },
+      "Carbon Dioxide Emissions": {
+        "type": "keyword"
+      },
+      "Cpi": {
+        "type": "double"
+      },
+      "Cpi Change (%)": {
+        "type": "keyword"
+      },
+      "Currency Code": {
+        "type": "keyword"
+      },
+      "Electric Power Consumption": {
+        "type": "keyword"
+      },
+      "Fertility Rate": {
+        "type": "double"
+      },
+      "Forested Area (%)": {
+        "type": "keyword"
+      },
+      "Fossil Fuel Energy Consumption": {
+        "type": "double"
+      },
+      "Gasoline Price": {
+        "type": "keyword"
+      },
+      "Gdp": {
+        "type": "keyword"
+      },
+      "Gross Primary Education Enrollment (%)": {
+        "type": "keyword"
+      },
+      "Gross Tertiary Education Enrollment (%)": {
+        "type": "keyword"
+      },
+      "ISO 3 Code": {
+        "type": "long"
+      },
+      "ISO 3 Name": {
+        "type": "keyword"
+      },
+      "Infant Mortality": {
+        "type": "double"
+      },
+      "Life Expectancy": {
+        "type": "double"
+      },
+      "Maternal Mortality Ratio": {
+        "type": "long"
+      },
+      "Minimum Wage": {
+        "type": "keyword"
+      },
+      "Name": {
+        "type": "keyword"
+      },
+      "Official Language": {
+        "type": "keyword"
+      },
+      "Official Name": {
+        "type": "text"
+      },
+      "Out Of Pocket Health Expenditure (%)": {
+        "type": "keyword"
+      },
+      "Physicians Per Thousand": {
+        "type": "double"
+      },
+      "Population": {
+        "type": "keyword"
+      },
+      "Tax Revenue (%)": {
+        "type": "keyword"
+      },
+      "Total Tax Rate": {
+        "type": "keyword"
+      },
+      "Unemployment Rate": {
+        "type": "keyword"
+      },
+      "Urban Population": {
+        "type": "keyword"
+    }
+  }
+}
+`
+
 const NATO_RED_BLUE_MAPPING = `
 {
-    "properties": {
-      "geo_point": {
+  "properties": {
+      "Active Personnel": {
+        "type": "long"
+      },
+      "Aircraft Carriers": {
+        "type": "long"
+      },
+      "Airports": {
+        "type": "long"
+      },
+      "Alpha-2 code": {
+        "type": "long"
+      },
+      "Alpha-3 code": {
+        "type": "long"
+      },
+      "Armored Vehicles": {
+        "type": "long"
+      },
+      "Attack Helicopters": {
+        "type": "long"
+      },
+      "Available Manpower": {
+        "type": "long"
+      },
+      "Boats": {
+        "type": "long"
+      },
+      "Coastline Coverage (km)": {
+        "type": "long"
+      },
+      "Corvettes": {
+        "type": "long"
+      },
+      "Country": {
+        "type": "text"
+      },
+      "Dedicated Attack": {
+        "type": "long"
+      },
+      "Defense Budget (usd)": {
+        "type": "long"
+      },
+      "Destroyers": {
+        "type": "long"
+      },
+      "External Debt (usd)": {
+        "type": "long"
+      },
+      "Fighters/Interceptors": {
+        "type": "long"
+      },
+      "Fit-for-Service": {
+        "type": "long"
+      },
+      "Foreign Exchange/Gold (usd)": {
+        "type": "long"
+      },
+      "Frigates": {
+        "type": "long"
+      },
+      "Geo_point": {
         "type": "geo_point"
-      }
+      },
+      "Helicopter Carriers": {
+        "type": "long"
+      },
+      "Helicopters": {
+        "type": "long"
+      },
+      "Labor Force": {
+        "type": "long"
+      },
+      "Merchant Marine Fleet": {
+        "type": "long"
+      },
+      "Mine Warfare": {
+        "type": "long"
+      },
+      "NATO Country": {
+        "type": "long"
+      },
+      "Numeric": {
+        "type": "long"
+      },
+      "Oil Consumption (bbl)": {
+        "type": "long"
+      },
+      "Oil Production (bbl)": {
+        "type": "long"
+      },
+      "Oil Proven Reserves (bbl)": {
+        "type": "long"
+      },
+      "Paramilitary": {
+        "type": "long"
+      },
+      "Patrol Vessels": {
+        "type": "long"
+      },
+      "Ports / Trade Terminals": {
+        "type": "long"
+      },
+      "Purchasing Power Parity (usd)": {
+        "type": "long"
+      },
+      "Railway Coverage": {
+        "type": "long"
+      },
+      "Reaching Mil Age Annually": {
+        "type": "long"
+      },
+      "Reserve Personnel": {
+        "type": "long"
+      },
+      "Roadway Coverage": {
+        "type": "long"
+      },
+      "Rocket Projectors": {
+        "type": "long"
+      },
+      "Self-Propelled Artillery": {
+        "type": "long"
+      },
+      "Shared Borders (km)": {
+        "type": "long"
+      },
+      "Special-Mission": {
+        "type": "long"
+      },
+      "Square Land Area (km)": {
+        "type": "long"
+      },
+      "Submarines": {
+        "type": "long"
+      },
+      "Tanker Fleet": {
+        "type": "long"
+      },
+      "Tanks": {
+        "type": "long"
+      },
+      "Tot Military Personnel (est_)": {
+        "type": "long"
+      },
+      "Total Aircraft Strength": {
+        "type": "long"
+      },
+      "Total Ground Strength": {
+        "type": "long"
+      },
+      "Total Naval Strength": {
+        "type": "long"
+      },
+      "Total Population": {
+        "type": "long"
+      },
+      "Towed Artillery": {
+        "type": "long"
+      },
+      "Trainers": {
+        "type": "long"
+      },
+      "Transports": {
+        "type": "long"
+      },
+      "Useable Waterways (km)": {
+        "type": "long"
     }
+  }
 }
 `
 

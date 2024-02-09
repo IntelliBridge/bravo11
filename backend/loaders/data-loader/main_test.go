@@ -110,5 +110,5 @@ func TestInsertNatoRedBlueData(t *testing.T) {
 func TestInsertCountryAssessmentData(t *testing.T) {
 	inputFolder := "../../data/country_assessment"
 	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
-	ResetDataForElasticIndex(client, SourceTypeCountryAssessment, "country-assessment", "", inputFolder)
+	ResetDataForElasticIndex(client, SourceTypeCountryAssessment, "country-assessment", COUNTRY_ASSESSMENT_MAPPING, inputFolder)
 }
