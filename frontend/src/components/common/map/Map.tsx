@@ -15,7 +15,6 @@ import { throttle } from "throttle-debounce";
 import {
   Tabs,
   Tab,
-  MenuDivider,
   Radio,
   RadioGroup,
   Slider,
@@ -25,19 +24,12 @@ import {
   H6,
   Checkbox,
 } from "@blueprintjs/core";
-import Map, {
-    Layer,
-    MapProvider,
-    MapRef,
-    Marker,
-    MarkerProps, Popup,
-} from "react-map-gl/maplibre";
+import Map, { MapRef, Popup } from "react-map-gl/maplibre";
 import { OutlinedInput } from "@mui/material";
 
 import { BaseLayer, DataLayer, Terrain } from "../../../types/map";
 import Chat from "components/ui/cards/Chat";
 import useBoundingData, { BoundingBox } from "./useBoundingData";
-import useGeoTransform from "./useGeoTransform";
 
 import "normalize.css";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -45,8 +37,12 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
-import useMarkerTransform from "./useMarkerTransform";
+import useMarkerTransform, {
+  ASSET_IMAGES,
+  MarkerPropsWithMetadata,
+} from "./useMarkerTransform";
 import { MarkerData } from "@/types/marker-data";
+import { Marker } from "react-map-gl";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -55,6 +51,7 @@ interface CopProps {
 }
 
 const { REACT_APP_ES_URL } = process.env;
+const LAYERS = ["Satellite", "Airplane", "Surface Vessel"];
 
 function Cop(props: CopProps) {
   const timelineContainer = useRef(null);
@@ -74,12 +71,21 @@ function Cop(props: CopProps) {
   const [selectedTab, setSelectedTab] = useState("data");
   const [modalOpen, setModalOpen] = useState(true);
 
-  const [bounds, setBounds] = useState<BoundingBox>(); // don't use this for now lmao
-  // const { data: boundingData } = useBoundingData("https://ad7a-72-253-135-20.ngrok-free.app/ais-assets/_search");
-  const { data: boundingData } = useBoundingData("./mock/data.json");
+  const [bounds, setBounds] = useState<BoundingBox>();
+  // todo(myles) i mean, remove the one from the json right
+  const { data: boundingData } = useBoundingData(
+    "https://ad7a-72-253-135-20.ngrok-free.app/ais-assets/_search",
+    {
+      _ne: { lat: bounds?._ne.lat || 0, lng: bounds?._ne.lng || 0 },
+      _sw: { lat: bounds?._sw.lat || 0, lng: bounds?._sw.lng || 0 },
+    },
+    ["Satellite", "Airplane", "Surface Vessel"]
+  );
+
+  useEffect(() => console.log(boundingData), [boundingData]);
+
+  // const { data: boundingData } = useBoundingData("./mock/data.json");
   const { data: markers } = useMarkerTransform(boundingData);
-  
-  useEffect(() => console.log(markers), [markers]);
 
   const [showPopup, setShowPopup] = useState(false);
   const [popupData, setPopupData] = useState<MarkerData | null>(null);
@@ -128,7 +134,8 @@ function Cop(props: CopProps) {
         options
       );
 
-      currentTime.current = moment();
+      // currentTime.current = moment();  // todo(myles) uncomment this lmao
+      currentTime.current = moment(new Date("2024-01-01"));
       timeline.current.addCustomTime(currentTime.current.toDate(), "cursor");
       timeline.current.on("timechange", (t) => {
         pauseCustom();
@@ -337,16 +344,46 @@ function Cop(props: CopProps) {
     </div>
   );
 
-  const points = useMemo(() => {}, []);
-    const handlePopupToggle = (data: MarkerData) => {
-        if (!showPopup) {
-            setPopupData(data);
-            setShowPopup(true)
+  const points = useMemo(() => {
+    if (!markers) return [];
+
+    const points: any[] = []; // todo(myles) type this
+
+    for (const marker of markers) {
+      let nearestDate: any;
+      const m: Partial<MarkerPropsWithMetadata> = { ...marker };
+
+      for (const timestamp of marker._source.locationByTime) {
+        if (nearestDate) {
+          if (moment(timestamp.timestamp).diff(moment(time), "days") < 0) {
+            nearestDate = timestamp.timestamp;
+
+            m.latitude = timestamp.location.lat;
+            m.longitude = timestamp.location.lon;
+          }
         } else {
-            setPopupData(null);
-            setShowPopup(false)
+          nearestDate = timestamp.timestamp;
+
+          m.latitude = timestamp.location.lat;
+          m.longitude = timestamp.location.lon;
         }
+      }
+
+      points.push(m);
     }
+
+    return points;
+  }, [markers, time]);
+
+  const handlePopupToggle = (data: MarkerData) => {
+    if (!showPopup) {
+      setPopupData(data);
+      setShowPopup(true);
+    } else {
+      setPopupData(null);
+      setShowPopup(false);
+    }
+  };
 
   return (
     <div
@@ -372,25 +409,33 @@ function Cop(props: CopProps) {
           setBounds({ _sw, _ne });
         }}
       >
-          {showPopup && (
-              <Popup
-                  longitude={popupData?.lng ?? 0}
-                  latitude={popupData?.lat ?? 0}
-                  closeOnClick={false}
-                  onClose={() => {
-                      setShowPopup(false);
-                      setPopupData(null)
-                  }}
-                  style={{
-                      color: 'black',
-                  }}
-                    >
-                  {Object.entries(popupData?.metadata ?? {}).map(([key, value]) => {
-                      return (<div key={key}>{key}: {value}</div>)
-                  })}
-              </Popup>
-          )}
+        {showPopup && (
+          <Popup
+            longitude={popupData?.lng ?? 0}
+            latitude={popupData?.lat ?? 0}
+            closeOnClick={false}
+            onClose={() => {
+              setShowPopup(false);
+              setPopupData(null);
+            }}
+            style={{
+              color: "black",
+            }}
+          >
+            {Object.entries(popupData?.metadata ?? {}).map(([key, value]) => {
+              return (
+                <div key={key}>
+                  {key}: {value}
+                </div>
+              );
+            })}
+          </Popup>
+        )}
         {/* Stick markers here */}
+        {points &&
+          points.map(({ _source, ...m }, i) => {
+            return <Marker {...m} onClick={() => console.log("works")} />;
+          })}
         {/* {markers && */}
         {/*   markers?.map(({ _source, ...m }, i) => { */}
         {/*       const markerData: MarkerData = { */}

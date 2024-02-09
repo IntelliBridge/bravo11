@@ -91,7 +91,6 @@ export default function useBoundingData(
         }
       }
     }
-    console.log('query', query);
     return query;
   }, [startDate, endDate, assetTypes, box?._ne.lat, box?._ne.lng, box?._sw.lat, box?._sw.lng]);
 
@@ -99,7 +98,9 @@ export default function useBoundingData(
     if (!url) return;
     
     const res = await axios.get(url, {
-      headers: {},
+      headers: {
+        "Content-Type": "application/json",
+      },
       data: { query },
     });
     

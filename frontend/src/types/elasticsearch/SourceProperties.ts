@@ -5,7 +5,7 @@ export type LocationByTime = {
 
 export type Entity = {
   id: string;
-  assetType: string;
-  sourceType: string;
+  assetType?: string;
+  sourceType?: string;
   locationByTime: LocationByTime[];
 };

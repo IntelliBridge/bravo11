@@ -1,0 +1,291 @@
+{
+  "took": 4,
+  "timed_out": false,
+  "_shards": { "total": 1, "successful": 1, "skipped": 0, "failed": 0 },
+  "hits": {
+    "total": { "value": 10000, "relation": "gte" },
+    "max_score": 1.2686299,
+    "hits": [
+      {
+        "_index": "assets",
+        "_id": "iuN8jI0B9V97pQswY2Ux",
+        "_score": 1.2686299,
+        "_source": {
+          "assetType": "Vessel",
+          "cog": "0.0",
+          "dimensions": "[]",
+          "entityId": "413475130",
+          "lat": "23.31666667",
+          "location": { "lat": 23.316667556762695, "lon": 116.75833129882812 },
+          "lon": "116.75833333",
+          "lonLatArray": {
+            "lonLatArray": [116.75833129882812, 23.316667556762695]
+          },
+          "mmsi": "413475130",
+          "msg_id": "27",
+          "name": "",
+          "nav_stat": "5.0",
+          "num_bits": "96",
+          "sog": "0.0",
+          "sourceType": "AIS",
+          "source_type": "S-AIS",
+          "tag": "[]",
+          "timestamp": "2024-01-05T08:15:56.216Z",
+          "trans_class": ""
+        }
+      },
+      {
+        "_index": "assets",
+        "_id": "rON8jI0B9V97pQswYijJ",
+        "_score": 1.2686299,
+        "_source": {
+          "assetType": "Vessel",
+          "cog": "0.0",
+          "dimensions": "[]",
+          "entityId": "413475130",
+          "lat": "23.31666667",
+          "location": { "lat": 23.316667556762695, "lon": 116.75833129882812 },
+          "lon": "116.75833333",
+          "lonLatArray": {
+            "lonLatArray": [116.75833129882812, 23.316667556762695]
+          },
+          "mmsi": "413475130",
+          "msg_id": "27",
+          "name": "",
+          "nav_stat": "5.0",
+          "num_bits": "96",
+          "sog": "0.0",
+          "sourceType": "AIS",
+          "source_type": "S-AIS",
+          "tag": "[]",
+          "timestamp": "2024-01-06T18:38:16.289Z",
+          "trans_class": ""
+        }
+      },
+      {
+        "_index": "assets",
+        "_id": "reN8jI0B9V97pQswYijJ",
+        "_score": 1.2686299,
+        "_source": {
+          "assetType": "Vessel",
+          "cog": "0.0",
+          "dimensions": "[]",
+          "entityId": "413475130",
+          "lat": "23.31666667",
+          "location": { "lat": 23.316667556762695, "lon": 116.75833129882812 },
+          "lon": "116.75833333",
+          "lonLatArray": {
+            "lonLatArray": [116.75833129882812, 23.316667556762695]
+          },
+          "mmsi": "413475130",
+          "msg_id": "27",
+          "name": "",
+          "nav_stat": "5.0",
+          "num_bits": "96",
+          "sog": "0.0",
+          "sourceType": "AIS",
+          "source_type": "S-AIS",
+          "tag": "[]",
+          "timestamp": "2024-01-06T01:28:36.32Z",
+          "trans_class": ""
+        }
+      },
+      {
+        "_index": "assets",
+        "_id": "ruN8jI0B9V97pQswYijJ",
+        "_score": 1.2686299,
+        "_source": {
+          "assetType": "Vessel",
+          "cog": "0.0",
+          "dimensions": "[]",
+          "entityId": "413475130",
+          "lat": "23.31666667",
+          "location": { "lat": 23.316667556762695, "lon": 116.75833129882812 },
+          "lon": "116.75833333",
+          "lonLatArray": {
+            "lonLatArray": [116.75833129882812, 23.316667556762695]
+          },
+          "mmsi": "413475130",
+          "msg_id": "27",
+          "name": "",
+          "nav_stat": "5.0",
+          "num_bits": "96",
+          "sog": "0.0",
+          "sourceType": "AIS",
+          "source_type": "S-AIS",
+          "tag": "[]",
+          "timestamp": "2024-01-06T08:55:56.33Z",
+          "trans_class": ""
+        }
+      },
+      {
+        "_index": "assets",
+        "_id": "reN8jI0B9V97pQswY2Ux",
+        "_score": 1.2686299,
+        "_source": {
+          "assetType": "Vessel",
+          "cog": "0.0",
+          "dimensions": "[]",
+          "entityId": "413475130",
+          "lat": "23.31666667",
+          "location": { "lat": 23.316667556762695, "lon": 116.75833129882812 },
+          "lon": "116.75833333",
+          "lonLatArray": {
+            "lonLatArray": [116.75833129882812, 23.316667556762695]
+          },
+          "mmsi": "413475130",
+          "msg_id": "27",
+          "name": "",
+          "nav_stat": "5.0",
+          "num_bits": "96",
+          "sog": "0.0",
+          "sourceType": "AIS",
+          "source_type": "S-AIS",
+          "tag": "[]",
+          "timestamp": "2024-01-05T22:25:26.569Z",
+          "trans_class": ""
+        }
+      },
+      {
+        "_index": "assets",
+        "_id": "seN8jI0B9V97pQswYijJ",
+        "_score": 1.2686299,
+        "_source": {
+          "assetType": "Vessel",
+          "cog": "0.0",
+          "dimensions": "[]",
+          "entityId": "413475130",
+          "lat": "23.31666667",
+          "location": { "lat": 23.316667556762695, "lon": 116.75833129882812 },
+          "lon": "116.75833333",
+          "lonLatArray": {
+            "lonLatArray": [116.75833129882812, 23.316667556762695]
+          },
+          "mmsi": "413475130",
+          "msg_id": "27",
+          "name": "",
+          "nav_stat": "5.0",
+          "num_bits": "96",
+          "sog": "0.0",
+          "sourceType": "AIS",
+          "source_type": "S-AIS",
+          "tag": "[]",
+          "timestamp": "2024-01-06T04:16:36.945Z",
+          "trans_class": ""
+        }
+      },
+      {
+        "_index": "assets",
+        "_id": "w-N8jI0B9V97pQswY10l",
+        "_score": 1.2686299,
+        "_source": {
+          "assetType": "Vessel",
+          "cog": "0.0",
+          "dimensions": "[]",
+          "entityId": "413475130",
+          "lat": "23.31666667",
+          "location": { "lat": 23.316667556762695, "lon": 116.75833129882812 },
+          "lon": "116.75833333",
+          "lonLatArray": {
+            "lonLatArray": [116.75833129882812, 23.316667556762695]
+          },
+          "mmsi": "413475130",
+          "msg_id": "27",
+          "name": "",
+          "nav_stat": "5.0",
+          "num_bits": "96",
+          "sog": "0.0",
+          "sourceType": "AIS",
+          "source_type": "S-AIS",
+          "tag": "[]",
+          "timestamp": "2024-01-06T07:58:46.625Z",
+          "trans_class": ""
+        }
+      },
+      {
+        "_index": "assets",
+        "_id": "BON8jI0B9V97pQswY2Yx",
+        "_score": 1.2686299,
+        "_source": {
+          "assetType": "Vessel",
+          "cog": "0.0",
+          "dimensions": "[]",
+          "entityId": "413475130",
+          "lat": "23.31666667",
+          "location": { "lat": 23.316667556762695, "lon": 116.75833129882812 },
+          "lon": "116.75833333",
+          "lonLatArray": {
+            "lonLatArray": [116.75833129882812, 23.316667556762695]
+          },
+          "mmsi": "413475130",
+          "msg_id": "27",
+          "name": "",
+          "nav_stat": "5.0",
+          "num_bits": "96",
+          "sog": "0.0",
+          "sourceType": "AIS",
+          "source_type": "S-AIS",
+          "tag": "[]",
+          "timestamp": "2024-01-06T06:28:46.402Z",
+          "trans_class": ""
+        }
+      },
+      {
+        "_index": "assets",
+        "_id": "GeN8jI0B9V97pQswYinJ",
+        "_score": 1.2686299,
+        "_source": {
+          "assetType": "Vessel",
+          "cog": "0.0",
+          "dimensions": "[]",
+          "entityId": "413475130",
+          "lat": "23.31666667",
+          "location": { "lat": 23.316667556762695, "lon": 116.75833129882812 },
+          "lon": "116.75833333",
+          "lonLatArray": {
+            "lonLatArray": [116.75833129882812, 23.316667556762695]
+          },
+          "mmsi": "413475130",
+          "msg_id": "27",
+          "name": "",
+          "nav_stat": "5.0",
+          "num_bits": "96",
+          "sog": "0.0",
+          "sourceType": "AIS",
+          "source_type": "S-AIS",
+          "tag": "[]",
+          "timestamp": "2024-01-06T04:55:36.652Z",
+          "trans_class": ""
+        }
+      },
+      {
+        "_index": "assets",
+        "_id": "IeN8jI0B9V97pQswYinJ",
+        "_score": 1.2686299,
+        "_source": {
+          "assetType": "Vessel",
+          "cog": "0.0",
+          "dimensions": "[]",
+          "entityId": "413475130",
+          "lat": "23.31666667",
+          "location": { "lat": 23.316667556762695, "lon": 116.75833129882812 },
+          "lon": "116.75833333",
+          "lonLatArray": {
+            "lonLatArray": [116.75833129882812, 23.316667556762695]
+          },
+          "mmsi": "413475130",
+          "msg_id": "27",
+          "name": "",
+          "nav_stat": "5.0",
+          "num_bits": "96",
+          "sog": "0.0",
+          "sourceType": "AIS",
+          "source_type": "S-AIS",
+          "tag": "[]",
+          "timestamp": "2024-01-07T16:15:08.225Z",
+          "trans_class": ""
+        }
+      }
+    ]
+  }
+}
