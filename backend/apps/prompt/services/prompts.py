@@ -23,7 +23,7 @@ Thought:{agent_scratchpad}'''
 
 
 template_map = '''
-Answer the following question based on the below context data.
+Answer the following question based on the below context data. If there is no context data, answer the question with "I am unsure, No data found.".
 
 Question: {input}
 

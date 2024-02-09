@@ -344,3 +344,4 @@ AWS_ACCESS_KEY = env("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = env("AWS_SECRET_KEY")
 
 ES_URL = env("ES_URL", default="http://localhost:9200")
+STITCHES_API_URL = env("STITCHES_API_URL", default="http://llms.stitches.mil/v1")

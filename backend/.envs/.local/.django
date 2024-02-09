@@ -13,4 +13,4 @@ REDIS_URL=redis://redis:6379/0
 CELERY_FLOWER_USER=debug
 CELERY_FLOWER_PASSWORD=debug
 
-ES_URL=https://06b2-72-253-135-20.ngrok-free.app
+ES_URL=https://ad7a-72-253-135-20.ngrok-free.app
