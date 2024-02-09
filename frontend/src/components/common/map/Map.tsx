@@ -80,7 +80,7 @@ const LAYERS = ["Satellite", "Aircraft", "Vessel"];
 console.log('establishing "NOW"');
 const NOW = moment();
 
-const url = "https://ad7a-72-253-135-20.ngrok-free.app/assets/_search";
+const url = REACT_APP_ES_URL + "/assets/_search";
 const assetTypes = ["Satellite", "Airplane", "Surface Vessel"];
 
 function Cop(props: CopProps) {
