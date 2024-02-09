@@ -430,15 +430,31 @@ function Cop(props: CopProps) {
   useEffect(() => {
     const points: any[] = []; // todo(myles) type this
 
-    const p = axios
-      .post(
+    const filter = {
+      geo_bounding_box: {
+        location: {
+          top_left: {
+            lat: 30,
+            lon: 117,
+          },
+          bottom_right: {
+            lat: 22,
+            lon: 165,
+          },
+        },
+      },
+    };
+
+    const vessels =
+      enabledAssets.includes("Vessel") &&
+      axios.post(
         url,
         {
           size: 1000,
           query: {
             bool: {
               must: [
-                { match_all: {} },
+                { match: { assetType: "Vessel" } },
                 {
                   range: {
                     timestamp: {
@@ -448,62 +464,105 @@ function Cop(props: CopProps) {
                   },
                 },
               ],
-              filter: {
-                geo_bounding_box: {
-                  location: {
-                    top_left: {
-                      lat: 27,
-                      lon: 120,
-                    },
-                    bottom_right: {
-                      lat: 22,
-                      lon: 165,
-                    },
-                  },
-                },
-              },
+              filter,
             },
           },
         },
         { headers: { "Content-Type": "application/json" } }
-      )
-      .then((res) => {
-        console.log(res.data);
-        const markers: MarkerPropsWithMetadata[] = [];
-        for (const entity of res.data.hits.hits) {
-          // const longitude =
-          //   entity._source.location.lon > 90
-          //     ? entity._source.location.lon + 180
-          //     : entity._source.location.lon;
-          const latitude =
-            entity._source.location.lat > 90
-              ? entity._source.location.lat + 180
-              : entity._source.location.lat;
+      );
 
-          const m: MarkerPropsWithMetadata = {
-            longitude: entity._source.location.lon,
-            latitude,
-            _source: entity._source,
-            children: (
-              <img
-                src={
-                  entity._source.assetType
-                    ? ASSET_IMAGES[entity._source.assetType]
-                    : undefined
-                }
-                alt={entity._source.id}
-                height={24}
-                width={24}
-              />
-            ),
-          };
+    const aircraft =
+      enabledAssets.includes("Aircraft") &&
+      axios.post(
+        url,
+        {
+          size: 1000,
+          query: {
+            bool: {
+              must: [
+                { match: { assetType: "Aircraft" } },
+                {
+                  range: {
+                    timestamp: {
+                      gte: moment(time).subtract(10, "minute").toISOString(),
+                      lte: moment(time).toISOString(),
+                    },
+                  },
+                },
+              ],
+              filter,
+            },
+          },
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-          markers.push(m);
+    const sats =
+      enabledAssets.includes("Satellites") &&
+      axios.post(
+        url,
+        {
+          size: 1000,
+          query: {
+            bool: {
+              must: [
+                { match: { assetType: "Satellite" } },
+                {
+                  range: {
+                    timestamp: {
+                      gte: moment(time).subtract(1, "day").toISOString(),
+                      lte: moment(time).toISOString(),
+                    },
+                  },
+                },
+              ],
+              filter,
+            },
+          },
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+    Promise.all([vessels, sats, aircraft]).then((res) => {
+      const d = [];
+      const markers = [];
+
+      for (const r of res) {
+        if (r && r.data) {
+          d.push(...r.data.hits.hits);
         }
+      }
 
-        setPoints(markers);
-      });
-  }, [time, query]);
+      for (const entity of d) {
+        const latitude =
+          entity._source.location.lat > 90
+            ? entity._source.location.lat + 180
+            : entity._source.location.lat;
+
+        const m: MarkerPropsWithMetadata = {
+          longitude: entity._source.location.lon,
+          latitude,
+          _source: entity._source,
+          children: (
+            <img
+              src={
+                entity._source.assetType
+                  ? ASSET_IMAGES[entity._source.assetType]
+                  : undefined
+              }
+              alt={entity._source.id}
+              height={24}
+              width={24}
+            />
+          ),
+        };
+
+        markers.push(m);
+      }
+
+      setPoints(markers);
+    });
+  }, [time, query, enabledAssets]);
 
   const handlePopupToggle = (data: MarkerData) => {
     if (!showPopup) {
@@ -514,7 +573,7 @@ function Cop(props: CopProps) {
       setShowPopup(false);
     }
   };
-
+  
   return (
     <div
       className={"bp4-dark"}
@@ -564,7 +623,9 @@ function Cop(props: CopProps) {
         {/* Stick markers here */}
         {points &&
           points.map(({ _source, ...m }, i) => {
-            return <Marker {...m} onClick={() => console.log("works")} />;
+            return (
+              <Marker key={i} {...m} onClick={() => console.log("works")} />
+            );
           })}
         {/* {markers && */}
         {/*   markers?.map(({ _source, ...m }, i) => { */}
