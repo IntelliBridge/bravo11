@@ -29,7 +29,7 @@ import { OutlinedInput } from "@mui/material";
 
 import { BaseLayer, DataLayer, Terrain } from "../../../types/map";
 import Chat from "components/ui/cards/Chat";
-import useBoundingData, { BoundingBox } from "./useBoundingData";
+import { BoundingBox } from "./useBoundingData";
 
 import "normalize.css";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -42,6 +42,8 @@ import useMarkerTransform, {
   MarkerPropsWithMetadata,
 } from "./useMarkerTransform";
 import { MarkerData } from "@/types/marker-data";
+import {isEmpty} from "lodash";
+import axios from "axios";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -51,6 +53,12 @@ interface CopProps {
 
 const { REACT_APP_ES_URL } = process.env;
 const LAYERS = ["Satellite", "Airplane", "Surface Vessel"];
+
+console.log('establishing "NOW"')
+const NOW = moment();
+
+const url = "https://ad7a-72-253-135-20.ngrok-free.app/assets/_search";
+const assetTypes = ["Satellite", "Airplane", "Surface Vessel"];
 
 function Cop(props: CopProps) {
   const timelineContainer = useRef(null);
@@ -64,27 +72,104 @@ function Cop(props: CopProps) {
   const [baseLoading, setBaseLoading] = useState(false);
   const [enabledLayers, setEnabledLayers] = useState<string[]>([]);
   const [playing, setPlaying] = useState(false);
-  const [time, setTime] = useState(moment().toISOString());
+  const [time, setTime] = useState(NOW.toISOString());
   const [rate, setRate] = useState(1);
 
   const [selectedTab, setSelectedTab] = useState("data");
   const [modalOpen, setModalOpen] = useState(true);
 
   const [bounds, setBounds] = useState<BoundingBox>();
-  // todo(myles) i mean, remove the one from the json right
-  const { data: boundingData } = useBoundingData(
-    "https://ad7a-72-253-135-20.ngrok-free.app/assets/_search",
-    {
-      _ne: { lat: bounds?._ne.lat || 0, lng: bounds?._ne.lng || 0 },
-      _sw: { lat: bounds?._sw.lat || 0, lng: bounds?._sw.lng || 0 },
-    },
-    ["Satellite", "Airplane", "Surface Vessel"]
-  );
 
-  useEffect(() => console.log(boundingData), [boundingData]);
+  const [startDate, setStartDate] = useState(NOW.clone().subtract(30, "day").toISOString());
+  const [endDate, setEndDate] = useState(NOW.toISOString())
+
+  const [data, setData] = useState<any>(null);
+
+  const box = useMemo(() => ({
+    _ne: { lat: bounds?._ne.lat || 0, lng: bounds?._ne.lng || 0 },
+    _sw: { lat: bounds?._sw.lat || 0, lng: bounds?._sw.lng || 0 },
+  }), [bounds?._ne.lat, bounds?._ne.lng, bounds?._sw.lat, bounds?._sw.lng])
+
+  const query = useMemo(() => {
+    return {
+      size: 0,
+      query: {
+        bool: {
+          must: [
+            {
+              range: {
+                timestamp: {
+                  gte: startDate,
+                  lte: endDate
+                }
+              }
+            },
+            ...!isEmpty(assetTypes) ? [{
+              terms: {
+                "assetType.keyword": assetTypes
+              }
+            }] : [],
+
+            ...!isEmpty(box?._ne?.lat) ? [{geo_bounding_box: {
+                location: {
+                  top_right: { lat: box?._ne.lat, lon: box?._ne.lng },
+                  bottom_left: { lat: box?._sw.lat, lon: box?._sw.lng },
+                }
+              }
+            }] : []
+          ]
+        }
+      },
+      "aggs": {
+        "entities": {
+          "terms": {
+            "field": "entityId.keyword",
+            "size": 10 // Adjust this size as needed
+          },
+          "aggs": {
+            "assetTypes": {
+              "terms": {
+                "field": "assetType.keyword",
+                "size": 10
+              }
+            },
+            "sourceTypes": {
+              "terms": {
+                "field": "sourceType.keyword",
+                "size": 10
+              }
+            },
+            "timestamp": {
+              "date_histogram": {
+                "field": "timestamp",
+                "calendar_interval": "day"  // Adjust this interval as needed
+
+              },
+              "aggs": {
+                "location": {
+                  "geo_centroid": {
+                    "field": "location"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }, [startDate, endDate, box?._ne.lat, box?._ne.lng, box?._sw.lat, box?._sw.lng]);
+
+  useEffect(() => {
+    if (!url) return;
+
+    console.log(JSON.stringify(query, null, '  '));
+    axios.post(url, query).then(res => setData(res.data));
+  }, [query, box, url]);
+
+  useEffect(() => console.log(data), [data]);
 
   // const { data: boundingData } = useBoundingData("./mock/data.json");
-  const { data: markers } = useMarkerTransform(boundingData);
+  const { data: markers } = useMarkerTransform(data);
 
   const [showPopup, setShowPopup] = useState(false);
   const [popupData, setPopupData] = useState<MarkerData | null>(null);
