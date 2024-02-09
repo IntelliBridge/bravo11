@@ -38,11 +38,10 @@ import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
 import useMarkerTransform, {
-  ASSET_IMAGES,
   MarkerPropsWithMetadata,
 } from "./useMarkerTransform";
 import { MarkerData } from "@/types/marker-data";
-import {isEmpty} from "lodash";
+import { isEmpty } from "lodash";
 import axios from "axios";
 
 interface CopProps {
@@ -52,9 +51,9 @@ interface CopProps {
 }
 
 const { REACT_APP_ES_URL } = process.env;
-const LAYERS = ["Satellite", "Airplane", "Surface Vessel"];
+const LAYERS = ["Satellite", "Aircraft", "Vessel"];
 
-console.log('establishing "NOW"')
+console.log('establishing "NOW"');
 const NOW = moment();
 
 const url = "https://ad7a-72-253-135-20.ngrok-free.app/assets/_search";
@@ -70,7 +69,7 @@ function Cop(props: CopProps) {
 
   const [baseLayer, setBaseLayer] = useState<string>(props.baseLayers[0].url);
   const [baseLoading, setBaseLoading] = useState(false);
-  const [enabledLayers, setEnabledLayers] = useState<string[]>([]);
+  const [enabledAssets, setEnabledAssets] = useState<string[]>([]);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(NOW.toISOString());
   const [rate, setRate] = useState(1);
@@ -80,15 +79,20 @@ function Cop(props: CopProps) {
 
   const [bounds, setBounds] = useState<BoundingBox>();
 
-  const [startDate, setStartDate] = useState(NOW.clone().subtract(30, "day").toISOString());
-  const [endDate, setEndDate] = useState(NOW.toISOString())
+  const [startDate, setStartDate] = useState(
+    NOW.clone().subtract(30, "day").toISOString()
+  );
+  const [endDate, setEndDate] = useState(NOW.toISOString());
 
   const [data, setData] = useState<any>(null);
 
-  const box = useMemo(() => ({
-    _ne: { lat: bounds?._ne.lat || 0, lng: bounds?._ne.lng || 0 },
-    _sw: { lat: bounds?._sw.lat || 0, lng: bounds?._sw.lng || 0 },
-  }), [bounds?._ne.lat, bounds?._ne.lng, bounds?._sw.lat, bounds?._sw.lng])
+  const box = useMemo(
+    () => ({
+      _ne: { lat: bounds?._ne.lat || 0, lng: bounds?._ne.lng || 0 },
+      _sw: { lat: bounds?._sw.lat || 0, lng: bounds?._sw.lng || 0 },
+    }),
+    [bounds?._ne.lat, bounds?._ne.lng, bounds?._sw.lat, bounds?._sw.lng]
+  );
 
   const query = useMemo(() => {
     return {
@@ -100,70 +104,86 @@ function Cop(props: CopProps) {
               range: {
                 timestamp: {
                   gte: startDate,
-                  lte: endDate
-                }
-              }
-            },
-            ...!isEmpty(assetTypes) ? [{
-              terms: {
-                "assetType.keyword": assetTypes
-              }
-            }] : [],
-
-            ...!isEmpty(box?._ne?.lat) ? [{geo_bounding_box: {
-                location: {
-                  top_right: { lat: box?._ne.lat, lon: box?._ne.lng },
-                  bottom_left: { lat: box?._sw.lat, lon: box?._sw.lng },
-                }
-              }
-            }] : []
-          ]
-        }
-      },
-      "aggs": {
-        "entities": {
-          "terms": {
-            "field": "entityId.keyword",
-            "size": 10 // Adjust this size as needed
-          },
-          "aggs": {
-            "assetTypes": {
-              "terms": {
-                "field": "assetType.keyword",
-                "size": 10
-              }
-            },
-            "sourceTypes": {
-              "terms": {
-                "field": "sourceType.keyword",
-                "size": 10
-              }
-            },
-            "timestamp": {
-              "date_histogram": {
-                "field": "timestamp",
-                "calendar_interval": "day"  // Adjust this interval as needed
-
+                  lte: endDate,
+                },
               },
-              "aggs": {
-                "location": {
-                  "geo_centroid": {
-                    "field": "location"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, [startDate, endDate, box?._ne.lat, box?._ne.lng, box?._sw.lat, box?._sw.lng]);
+            },
+            ...(!isEmpty(assetTypes)
+              ? [
+                  {
+                    terms: {
+                      "assetType.keyword": enabledAssets,
+                    },
+                  },
+                ]
+              : []),
+
+            ...(!isEmpty(box?._ne?.lat)
+              ? [
+                  {
+                    geo_bounding_box: {
+                      location: {
+                        top_right: { lat: box?._ne.lat, lon: box?._ne.lng },
+                        bottom_left: { lat: box?._sw.lat, lon: box?._sw.lng },
+                      },
+                    },
+                  },
+                ]
+              : []),
+          ],
+        },
+      },
+      aggs: {
+        entities: {
+          terms: {
+            field: "entityId.keyword",
+            size: 10, // Adjust this size as needed
+          },
+          aggs: {
+            assetTypes: {
+              terms: {
+                field: "assetType.keyword",
+                size: 10,
+              },
+            },
+            sourceTypes: {
+              terms: {
+                field: "sourceType.keyword",
+                size: 10,
+              },
+            },
+            timestamp: {
+              date_histogram: {
+                field: "timestamp",
+                calendar_interval: "day", // Adjust this interval as needed
+              },
+              aggs: {
+                location: {
+                  geo_centroid: {
+                    field: "location",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+  }, [
+    startDate,
+    endDate,
+    enabledAssets,
+    box?._ne.lat,
+    box?._ne.lng,
+    box?._sw.lat,
+    box?._sw.lng,
+  ]);
 
   useEffect(() => {
     if (!url) return;
 
-    console.log(JSON.stringify(query, null, '  '));
-    axios.post(url, query).then(res => setData(res.data));
+    console.log(JSON.stringify(query, null, "  "));
+    axios.post(url, query).then((res) => setData(res.data));
   }, [query, box, url]);
 
   useEffect(() => console.log(data), [data]);
@@ -249,46 +269,25 @@ function Cop(props: CopProps) {
     </>
   );
 
-  const checkboxes: JSX.Element[] = [];
-  let previousGroup = "";
-
-  useEffect(() => {
-    const layers = [...props.dataLayers];
-
-    // add data layer props
-    layers.forEach((l: DataLayer) => {
-      if (l.group !== previousGroup) {
-        previousGroup = l.group;
-        checkboxes.push(
-          <H6 key={l.group} style={{ marginTop: 20 }}>
-            {l.group}
-          </H6>
-        );
-      }
-
-      checkboxes.push(
-        <Checkbox
-          key={l.name}
-          label={l.name}
-          checked={layers.includes(l.layer.id)}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            if (e.target.checked) {
-              setEnabledLayers([...layers, l.layer.id]);
-            } else {
-              setEnabledLayers((prev) =>
-                prev.filter((id) => id !== l.layer.id)
-              );
-            }
-          }}
-        />
-      );
-    });
-  }, [props.dataLayers]);
-
   const dataLayerTab = (
     <>
       <H5 style={{ marginBottom: 20 }}>Data Layers</H5>
-      {checkboxes}
+      {LAYERS.map((l) => {
+        return (
+          <Checkbox
+            key={l}
+            label={l}
+            checked={enabledAssets.includes(l)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              if (e.target.checked) {
+                setEnabledAssets((prev) => [...prev, l]);
+              } else {
+                setEnabledAssets((prev) => prev.filter((id) => id !== l));
+              }
+            }}
+          />
+        );
+      })}
     </>
   );
 
