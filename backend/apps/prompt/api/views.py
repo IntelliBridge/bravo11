@@ -31,7 +31,7 @@ def prompt(req: Request):
     messages = req.data.get("messages", [])
     bounding_box = req.data.get("bounding_box", None)
     asset_id = req.data.get("asset_id", None)
-    model = MODEL_CLASS_MAP[req.data.get("model", BedrockModel.llama2_70b_chat_v1)]
+    model = MODEL_CLASS_MAP[req.data.get("model", AvanaModel.mistral_78_instruct_v2_awq)]
     bounding_box_resp = {}
     asset_ids_resp = {}
 

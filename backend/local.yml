@@ -1,6 +1,7 @@
 version: '3'
 
 volumes:
+  app: 
   bravo11_local_postgres_data: {}
   bravo11_local_postgres_data_backups: {}
   esdata01:
@@ -76,6 +77,17 @@ services:
       timeout: 10s
       retries: 120
 
+  frontend:
+    build:
+      context: ../frontend/
+      dockerfile: .
+    image: bravo11_local_frontend
+    container_name: bravo11_local_frontend
+    volumes:
+      - .:/app:z
+    ports:
+      - '3000:3000'
+    command: /start
 
   kibana:
     depends_on:
@@ -102,3 +114,4 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
+
