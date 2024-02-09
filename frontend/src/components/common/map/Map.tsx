@@ -26,11 +26,11 @@ import {
   Checkbox,
 } from "@blueprintjs/core";
 import Map, {
-  Layer,
-  MapProvider,
-  MapRef,
-  Marker,
-  MarkerProps,
+    Layer,
+    MapProvider,
+    MapRef,
+    Marker,
+    MarkerProps, Popup,
 } from "react-map-gl/maplibre";
 import { OutlinedInput } from "@mui/material";
 
@@ -46,6 +46,7 @@ import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
 import useMarkerTransform from "./useMarkerTransform";
+import { MarkerData } from "@/types/marker-data";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -77,6 +78,8 @@ function Cop(props: CopProps) {
   const { data: boundingData } = useBoundingData("https://ad7a-72-253-135-20.ngrok-free.app/ais-assets/_search");
   const { data: markers } = useMarkerTransform(boundingData);
 
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupData, setPopupData] = useState<MarkerData | null>(null);
   const throttleFunc = throttle(1000, (t) => {
     currentTime.current = moment(t.time);
     setTime(t.time.toISOString());
@@ -332,6 +335,15 @@ function Cop(props: CopProps) {
   );
 
   const points = useMemo(() => {}, []);
+    const handlePopupToggle = (data: MarkerData) => {
+        if (!showPopup) {
+            setPopupData(data);
+            setShowPopup(true)
+        } else {
+            setPopupData(null);
+            setShowPopup(false)
+        }
+    }
 
   return (
     <div
@@ -357,11 +369,36 @@ function Cop(props: CopProps) {
           setBounds({ _sw, _ne });
         }}
       >
+          {showPopup && (
+              <Popup
+                  longitude={popupData?.lng ?? 0}
+                  latitude={popupData?.lat ?? 0}
+                  closeOnClick={false}
+                  onClose={() => {
+                      setShowPopup(false);
+                      setPopupData(null)
+                  }}
+                  style={{
+                      color: 'black',
+                  }}
+                    >
+                  {Object.entries(popupData?.metadata ?? {}).map(([key, value]) => {
+                      return (<div key={key}>{key}: {value}</div>)
+                  })}
+              </Popup>
+          )}
         {/* Stick markers here */}
         {markers &&
-          markers?.map(({ _source, ...m }, i) => (
-            <Marker {...(m as MarkerProps)} />
-          ))}
+          markers?.map(({ _source, ...m }, i) => {
+              const markerData: MarkerData = {
+                  lat: _source?.location.lat ?? 0,
+                  lng: _source?.location.lon ?? 0,
+                  metadata: {id: _source?.entityId}
+              }
+              return (
+                  <Marker {...(m as MarkerProps)} onClick={() => handlePopupToggle(markerData)}/>
+              )
+          })}
       </Map>
       {timebar}
       <div
