@@ -62,6 +62,11 @@ services:
       - xpack.security.enabled=false
       - xpack.security.http.ssl.enabled=false
       - xpack.security.transport.ssl.enabled=false
+      - http.cors.allow-origin="*" # Only use unrestricted value for local development
+      - http.cors.enabled=true
+      - http.cors.allow-credentials=true
+      - http.cors.allow-methods="OPTIONS, POST"
+      - http.cors.allow-headers="X-Requested-With, X-Auth-Token, Content-Type, Content-Length, Authorization, Access-Control-Allow-Headers, Accept"
     ulimits:
       memlock:
         soft: -1

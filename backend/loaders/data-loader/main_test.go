@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"testing"
 )
 
@@ -44,47 +45,70 @@ func TestDownloadGdelt(t *testing.T) {
 	}
 }
 
+func TestDeleteIndex(t *testing.T) {
+	es := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
+	res, err := es.Indices.Delete([]string{"ais"}, es.Indices.Delete.WithIgnoreUnavailable(true))
+	if err != nil || res.IsError() {
+		log.Fatalf("Cannot delete index: %s", err)
+	}
+	res.Body.Close()
+}
+
 func TestInsertGdeltExportCSVs(t *testing.T) {
-	inputFolder := "../../data/gdelt/export"
+	inputFolder := "../../data/gdelt-old/export"
 	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
-	InsertCSVDataToElastic(client, "gdelt-exports", GDELT_EXPORT_MAPPING, inputFolder)
+	ResetDataForElasticIndex(client, SourceTypeGDELTExport, "test-gdelt-exports", GDELT_EXPORT_MAPPING, inputFolder)
 }
 
 func TestInsertGdeltMentionCSVs(t *testing.T) {
-	inputFolder := "../../data/gdelt/mentions"
+	inputFolder := "../../data/test"
 	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
-	InsertCSVDataToElastic(client, "gdelt-mentions", "", inputFolder)
+	ResetDataForElasticIndex(client, SourceTypeGDELTMention, "gdelt-mentions", "", inputFolder)
 }
 
 func TestInsertSatelliteCSVs(t *testing.T) {
 	inputFolder := "../../data/satellite_accesses"
 	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
-	InsertCSVDataToElastic(client, "satellite", SATELLITE_MAPPING, inputFolder)
+	ResetDataForElasticIndex(client, SourceTypeSatelliteAccess, "satellite-assets", ASSET_MAPPING, inputFolder)
+}
+
+func TestInsertAISCSVs(t *testing.T) {
+	inputFolder := "../../data/aisFeb23_Feb24csv"
+	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
+	ResetDataForElasticIndex(client, SourceTypeAIS, "ais-assets", ASSET_MAPPING, inputFolder)
+}
+
+func TestInsertBASCSVs(t *testing.T) {
+	inputFolder := "../../data/bas"
+	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
+	ResetDataForElasticIndex(client, SourceTypeBAS, "bas-assets", ASSET_MAPPING, inputFolder)
+}
+
+func TestInsertAdsbCSVs(t *testing.T) {
+	inputFolder := "./data/adsb"
+	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
+	ResetDataForElasticIndex(client, SourceTypeADSB, "test-adsb-assets", ASSET_MAPPING, inputFolder)
 }
 
 func TestInsertAcledCSVs(t *testing.T) {
 	inputFolder := "../../data/acled"
 	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
-	InsertCSVDataToElastic(client, "acled", ACLED_MAPPING, inputFolder)
+	ResetDataForElasticIndex(client, SourceTypeACLED, "acled", ACLED_MAPPING, inputFolder)
 }
 
 func TestInsertInfraData(t *testing.T) {
 	inputFolder := "../../data/infra"
 	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
-	InsertCSVDataToElastic(client, "infra", INFRA_MAPPING, inputFolder)
+	ResetDataForElasticIndex(client, SourceTypeInfra, "infra", INFRA_MAPPING, inputFolder)
 }
 
-//func TestRetrieveData(t *testing.T) {
-//	//https://elastic:UGr00p!@udp-stage-api.ugroup.io
-//	client := CreateClient([]string{"https://udp-stage-api.ugroup.io"}, "elastic", "UGr00p!")
-//	resp, err := esapi.CatIndicesRequest{Format: "json"}.Do(context.Background(), client)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	defer resp.Body.Close()
-//	dsp, err := client.Search(client.Search.WithIndex("nato_infrastructure_logistics_092622"))
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	fmt.Println(resp.String())
-//}
+func TestInsertNatoRedBlueData(t *testing.T) {
+	inputFolder := "../../data/nato_red_blue"
+	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
+	ResetDataForElasticIndex(client, SourceTypeNatoRedBlue, "nato-red-blue", NATO_RED_BLUE_MAPPING, inputFolder)
+}
+func TestInsertCountryAssessmentData(t *testing.T) {
+	inputFolder := "../../data/country_assessment"
+	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
+	ResetDataForElasticIndex(client, SourceTypeCountryAssessment, "country-assessment", COUNTRY_ASSESSMENT_MAPPING, inputFolder)
+}

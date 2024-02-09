@@ -1,6 +1,75 @@
 package main
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
+
+type SourceType string
+
+const (
+	SourceTypeSatelliteAccess   SourceType = "SatelliteAccess"
+	SourceTypeADSB              SourceType = "ADSB"
+	SourceTypeACLED             SourceType = "ACLED"
+	SourceTypeCountryAssessment SourceType = "CountryAssessment"
+	SourceTypeGDELTExport       SourceType = "GDELTExport"
+	SourceTypeGDELTMention      SourceType = "GDELTMention"
+	SourceTypeInfra             SourceType = "Infra"
+	SourceTypeNatoRedBlue       SourceType = "NATORedBlue"
+	SourceTypeAIS               SourceType = "AIS"
+	SourceTypeBAS               SourceType = "BAS"
+)
+
+type AssetType string
+
+const (
+	AssetTypeSatellite AssetType = "Satellite"
+	AssetTypeAircraft  AssetType = "Aircraft"
+	AssetTypeVessel    AssetType = "Vessel"
+)
+
+//type Flight struct {
+//	Hex         string       `json:"hex,omitempty"`
+//	Type        string       `json:"type,omitempty"`
+//	Flight      string       `json:"flight,omitempty"`
+//	R           string       `json:"r,omitempty"`
+//	T           string       `json:"t,omitempty"`
+//	AltBaro     int          `json:"alt_baro,omitempty"`
+//	GS          float32      `json:"gs,omitempty"`
+//	Track       float32      `json:"track,omitempty"`
+//	BaroRate    int          `json:"baro_rate,omitempty"`
+//	Squawk      string       `json:"squawk,omitempty"'`
+//	Category    string       `json:"category"`
+//	Lat         string       `json:"lat,omitempty"`
+//	Lon         string       `json:"lon,omitempty"`
+//	Location    *GeoLocation `json:"Location,omitempty"`
+//	LastUpdated time.Time    `json:"LASTUPDATED"`
+//	AltBaro     string       `json:"alt_baro,omitempty"`
+//	// Include other fields as necessary.
+//}
+
+type AssetLocation struct {
+	EntityID   string     `json:"entityId"`
+	AssetType  AssetType  `json:"assetType"`
+	SourceType SourceType `json:"sourceType"`
+	Location   Location   `json:"location"`
+	Timestamp  time.Time  `json:"timestamp"`
+}
+
+type Location struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
+
+func (l Location) ToLonLatArray() LonLatArray {
+	return LonLatArray{
+		LonLatArray: []float64{l.Lon, l.Lat},
+	}
+}
+
+type LonLatArray struct {
+	LonLatArray []float64 `json:"lonLatArray"`
+}
 
 type GeoLocation struct {
 	Lat string `json:"lat"`
@@ -15,6 +84,332 @@ func (g GeoLocation) ToGeoPointStr() string {
 	return strings.Join([]string{g.Lat, g.Lon}, ",")
 }
 
+const AIS_MAPPING = `
+{
+    "properties": {
+      "location": {
+        "type": "geo_point"
+      },
+      "basedatetime": {
+        "type": "date"
+      }
+    }
+}
+`
+
+const ADSB_MAPPING = `
+{
+    "properties": {
+      "location": {
+        "type": "geo_point"
+      },
+      "time": {
+        "type": "date"
+      }
+    }
+}
+`
+
+const ASSET_MAPPING = `
+{
+    "properties": {
+      "location": {
+        "type": "geo_point"
+      },
+      "timestamp": {
+        "type": "date"
+      }
+    }
+}
+`
+
+const COUNTRY_ASSESSMENT_MAPPING = `
+{
+  "properties": {
+      "Abbreviation": {
+        "type": "keyword"
+      },
+      "Agricultural Land (%)": {
+        "type": "keyword"
+      },
+      "Area": {
+        "type": "keyword"
+      },
+      "Armed Forces Size": {
+        "type": "keyword"
+      },
+      "Birth Rate": {
+        "type": "double"
+      },
+      "Calling Code": {
+        "type": "long"
+      },
+      "Capital/Major City": {
+        "type": "keyword"
+      },
+      "Carbon Dioxide Emissions": {
+        "type": "keyword"
+      },
+      "Cpi": {
+        "type": "double"
+      },
+      "Cpi Change (%)": {
+        "type": "keyword"
+      },
+      "Currency Code": {
+        "type": "keyword"
+      },
+      "Electric Power Consumption": {
+        "type": "keyword"
+      },
+      "Fertility Rate": {
+        "type": "double"
+      },
+      "Forested Area (%)": {
+        "type": "keyword"
+      },
+      "Fossil Fuel Energy Consumption": {
+        "type": "double"
+      },
+      "Gasoline Price": {
+        "type": "keyword"
+      },
+      "Gdp": {
+        "type": "keyword"
+      },
+      "Gross Primary Education Enrollment (%)": {
+        "type": "keyword"
+      },
+      "Gross Tertiary Education Enrollment (%)": {
+        "type": "keyword"
+      },
+      "ISO 3 Code": {
+        "type": "long"
+      },
+      "ISO 3 Name": {
+        "type": "keyword"
+      },
+      "Infant Mortality": {
+        "type": "double"
+      },
+      "Life Expectancy": {
+        "type": "double"
+      },
+      "Maternal Mortality Ratio": {
+        "type": "long"
+      },
+      "Minimum Wage": {
+        "type": "keyword"
+      },
+      "Name": {
+        "type": "keyword"
+      },
+      "Official Language": {
+        "type": "keyword"
+      },
+      "Official Name": {
+        "type": "text"
+      },
+      "Out Of Pocket Health Expenditure (%)": {
+        "type": "keyword"
+      },
+      "Physicians Per Thousand": {
+        "type": "double"
+      },
+      "Population": {
+        "type": "keyword"
+      },
+      "Tax Revenue (%)": {
+        "type": "keyword"
+      },
+      "Total Tax Rate": {
+        "type": "keyword"
+      },
+      "Unemployment Rate": {
+        "type": "keyword"
+      },
+      "Urban Population": {
+        "type": "keyword"
+    }
+  }
+}
+`
+
+const NATO_RED_BLUE_MAPPING = `
+{
+  "properties": {
+      "Active Personnel": {
+        "type": "long"
+      },
+      "Aircraft Carriers": {
+        "type": "long"
+      },
+      "Airports": {
+        "type": "long"
+      },
+      "Alpha-2 code": {
+        "type": "long"
+      },
+      "Alpha-3 code": {
+        "type": "long"
+      },
+      "Armored Vehicles": {
+        "type": "long"
+      },
+      "Attack Helicopters": {
+        "type": "long"
+      },
+      "Available Manpower": {
+        "type": "long"
+      },
+      "Boats": {
+        "type": "long"
+      },
+      "Coastline Coverage (km)": {
+        "type": "long"
+      },
+      "Corvettes": {
+        "type": "long"
+      },
+      "Country": {
+        "type": "text"
+      },
+      "Dedicated Attack": {
+        "type": "long"
+      },
+      "Defense Budget (usd)": {
+        "type": "long"
+      },
+      "Destroyers": {
+        "type": "long"
+      },
+      "External Debt (usd)": {
+        "type": "long"
+      },
+      "Fighters/Interceptors": {
+        "type": "long"
+      },
+      "Fit-for-Service": {
+        "type": "long"
+      },
+      "Foreign Exchange/Gold (usd)": {
+        "type": "long"
+      },
+      "Frigates": {
+        "type": "long"
+      },
+      "Geo_point": {
+        "type": "geo_point"
+      },
+      "Helicopter Carriers": {
+        "type": "long"
+      },
+      "Helicopters": {
+        "type": "long"
+      },
+      "Labor Force": {
+        "type": "long"
+      },
+      "Merchant Marine Fleet": {
+        "type": "long"
+      },
+      "Mine Warfare": {
+        "type": "long"
+      },
+      "NATO Country": {
+        "type": "long"
+      },
+      "Numeric": {
+        "type": "long"
+      },
+      "Oil Consumption (bbl)": {
+        "type": "long"
+      },
+      "Oil Production (bbl)": {
+        "type": "long"
+      },
+      "Oil Proven Reserves (bbl)": {
+        "type": "long"
+      },
+      "Paramilitary": {
+        "type": "long"
+      },
+      "Patrol Vessels": {
+        "type": "long"
+      },
+      "Ports / Trade Terminals": {
+        "type": "long"
+      },
+      "Purchasing Power Parity (usd)": {
+        "type": "long"
+      },
+      "Railway Coverage": {
+        "type": "long"
+      },
+      "Reaching Mil Age Annually": {
+        "type": "long"
+      },
+      "Reserve Personnel": {
+        "type": "long"
+      },
+      "Roadway Coverage": {
+        "type": "long"
+      },
+      "Rocket Projectors": {
+        "type": "long"
+      },
+      "Self-Propelled Artillery": {
+        "type": "long"
+      },
+      "Shared Borders (km)": {
+        "type": "long"
+      },
+      "Special-Mission": {
+        "type": "long"
+      },
+      "Square Land Area (km)": {
+        "type": "long"
+      },
+      "Submarines": {
+        "type": "long"
+      },
+      "Tanker Fleet": {
+        "type": "long"
+      },
+      "Tanks": {
+        "type": "long"
+      },
+      "Tot Military Personnel (est_)": {
+        "type": "long"
+      },
+      "Total Aircraft Strength": {
+        "type": "long"
+      },
+      "Total Ground Strength": {
+        "type": "long"
+      },
+      "Total Naval Strength": {
+        "type": "long"
+      },
+      "Total Population": {
+        "type": "long"
+      },
+      "Towed Artillery": {
+        "type": "long"
+      },
+      "Trainers": {
+        "type": "long"
+      },
+      "Transports": {
+        "type": "long"
+      },
+      "Useable Waterways (km)": {
+        "type": "long"
+    }
+  }
+}
+`
+
 const INFRA_MAPPING = `
 {
     "properties": {
@@ -27,7 +422,7 @@ const INFRA_MAPPING = `
 const ACLED_MAPPING = `
 {
     "properties": {
-      "Lat_Lon": {
+      "location": {
         "type": "geo_point"
       },
       "timestamp": {
@@ -40,10 +435,13 @@ const ACLED_MAPPING = `
 const SATELLITE_MAPPING = `
 {
     "properties": {
-      "Lat_Lon": {
+      "location": {
         "type": "geo_point"
       },
-      "ACCESS_START": {
+      "access_start": {
+        "type": "date"
+      },
+      "access_end": {
         "type": "date"
       }
     }
@@ -53,16 +451,16 @@ const SATELLITE_MAPPING = `
 const GDELT_EXPORT_MAPPING = `
 {
     "properties": {
-      "ActionGeo_Location": {
+      "action_location": {
         "type": "geo_point"
       },
-      "Actor1Geo_Location": {
+      "actor1_location": {
         "type": "geo_point"
       },
-      "Actor2Geo_Location": {
+      "actor2_location": {
         "type": "geo_point"
       },
-      "DATEADDED": {
+      "dateadded": {
         "type": "date"
       }
     }
