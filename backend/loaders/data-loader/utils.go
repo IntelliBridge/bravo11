@@ -114,9 +114,12 @@ func InsertCSVDataToElastic(es *elasticsearch.Client, sourceType SourceType, ind
 		}
 	}
 
+	log.Println("Finished reading all CSV files, inserting data into elastic...")
 	if len(dataset) != 0 {
+		log.Printf("Inserting %d records into elastic...\n", len(dataset))
 		InsertDataToElastic(es, indexName, mapping, dataset, appendMode)
 	}
+	log.Println("Done insert")
 }
 
 func InsertDataToElastic(es *elasticsearch.Client, indexName string, mapping string, articles []interface{}, appendMode bool) {
@@ -406,8 +409,34 @@ func transformGdeltExportData(data map[string]string) map[string]interface{} {
 		output[k] = v
 	}
 
-	latStr, ok1 := data["Actor1Geo_Lat"]
-	lonStr, ok2 := data["Actor1Geo_Long"]
+	latStr, ok1 := data["ActionGeo_Lat"]
+	lonStr, ok2 := data["ActionGeo_Long"]
+	if ok1 && ok2 && latStr != "" && lonStr != "" {
+		lat, err := strconv.ParseFloat(latStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		lon, err := strconv.ParseFloat(lonStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		//filter out south china sea area
+		if lon < 90 {
+			return nil
+		}
+		location = &Location{
+			Lat: lat,
+			Lon: lon,
+		}
+		output["action_location"] = location
+	} else {
+		return nil
+	}
+
+	latStr, ok1 = data["Actor1Geo_Lat"]
+	lonStr, ok2 = data["Actor1Geo_Long"]
 	if ok1 && ok2 && latStr != "" && lonStr != "" {
 		lat, err := strconv.ParseFloat(latStr, 32)
 		if err != nil {
@@ -446,24 +475,14 @@ func transformGdeltExportData(data map[string]string) map[string]interface{} {
 		output["actor2_location"] = location
 	}
 
-	latStr, ok1 = data["ActionGeo_Lat"]
-	lonStr, ok2 = data["ActionGeo_Long"]
-	if ok1 && ok2 && latStr != "" && lonStr != "" {
-		lat, err := strconv.ParseFloat(latStr, 32)
+	layout := "20060102150405"
+	if startTime, ok := data["DATEADDED"]; ok {
+		timestamp, err := time.ParseInLocation(layout, startTime, time.UTC)
 		if err != nil {
-			log.Printf("%v\n", err)
-			return nil
+			log.Println("Error converting string to int64:", err)
+		} else {
+			output["DATEADDED"] = timestamp
 		}
-		lon, err := strconv.ParseFloat(lonStr, 32)
-		if err != nil {
-			log.Printf("%v\n", err)
-			return nil
-		}
-		location = &Location{
-			Lat: lat,
-			Lon: lon,
-		}
-		output["action_location"] = location
 	}
 
 	return output
@@ -513,21 +532,6 @@ func transformAcledData(data map[string]string) map[string]interface{} {
 func transformADSBData(data map[string]string) map[string]interface{} {
 	var location *Location
 	var timestamp *time.Time
-	output := make(map[string]interface{})
-	for k, v := range data {
-		output[k] = v
-	}
-
-	if startTime, ok := data["Time"]; ok {
-		// Parse the time in UTC
-		parsedTime, err := time.Parse(time.RFC3339, startTime)
-		if err != nil {
-			log.Printf("error parsing Time as time: %v\n", err)
-		} else {
-			delete(output, "Time")
-			timestamp = &parsedTime
-		}
-	}
 
 	latStr, ok1 := data["Latitude"]
 	lonStr, ok2 := data["Longitude"]
@@ -542,11 +546,34 @@ func transformADSBData(data map[string]string) map[string]interface{} {
 			log.Printf("%v\n", err)
 			return nil
 		}
+		//only need data on southern china sea area
+		if lon < 90 {
+			return nil
+		}
 		location = &Location{
 			Lat: lat,
 			Lon: lon,
 		}
+	}
+
+	output := make(map[string]interface{})
+	for k, v := range data {
+		output[k] = v
+	}
+
+	if location != nil {
 		output["location"] = location
+	}
+
+	if startTime, ok := data["Time"]; ok {
+		// Parse the time in UTC
+		parsedTime, err := time.Parse(time.RFC3339, startTime)
+		if err != nil {
+			log.Printf("error parsing Time as time: %v\n", err)
+		} else {
+			delete(output, "Time")
+			timestamp = &parsedTime
+		}
 	}
 
 	if location != nil && timestamp != nil {

@@ -55,9 +55,9 @@ func TestDeleteIndex(t *testing.T) {
 }
 
 func TestInsertGdeltExportCSVs(t *testing.T) {
-	inputFolder := "../../data/test"
+	inputFolder := "../../data/gdelt-old/export"
 	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
-	ResetDataForElasticIndex(client, SourceTypeGDELTExport, "gdelt-exports", GDELT_EXPORT_MAPPING, inputFolder)
+	ResetDataForElasticIndex(client, SourceTypeGDELTExport, "test-gdelt-exports", GDELT_EXPORT_MAPPING, inputFolder)
 }
 
 func TestInsertGdeltMentionCSVs(t *testing.T) {
@@ -85,9 +85,9 @@ func TestInsertBASCSVs(t *testing.T) {
 }
 
 func TestInsertAdsbCSVs(t *testing.T) {
-	inputFolder := "../../data/test"
+	inputFolder := "./data/adsb"
 	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
-	ResetDataForElasticIndex(client, SourceTypeADSB, "adsb-assets", ASSET_MAPPING, inputFolder)
+	ResetDataForElasticIndex(client, SourceTypeADSB, "test-adsb-assets", ASSET_MAPPING, inputFolder)
 }
 
 func TestInsertAcledCSVs(t *testing.T) {
