@@ -74,7 +74,7 @@ function Cop(props: CopProps) {
   const [modalOpen, setModalOpen] = useState(true);
 
   const [bounds, setBounds] = useState<BoundingBox>(); // don't use this for now lmao
-  const { data: boundingData } = useBoundingData("/mock/some-data.json");
+  const { data: boundingData } = useBoundingData("https://ad7a-72-253-135-20.ngrok-free.app/ais-assets/_search");
   const { data: markers } = useMarkerTransform(boundingData);
 
   const throttleFunc = throttle(1000, (t) => {
