@@ -5,8 +5,6 @@ import { useMemo } from "react";
 import { MarkerProps } from "react-map-gl"; // instead of going to geojson, just create markers
 import { type Entity } from "@/types/elasticsearch/SourceProperties";
 
-import { data as d } from "./data";
-
 export interface MarkerPropsWithMetadata extends MarkerProps {
   _source?: Entity;
 }
@@ -22,9 +20,9 @@ export const ASSET_IMAGES: Record<string, string> = {
 const DEFAULT_ASSET_IMAGE = "https://via.placeholder.com/30";
 
 export default function useMarkerTransform(elasticHits?: any) {
-  const data = useMemo(() => {
+  return useMemo(() => {
     const data: any[] = [];
-    const entities = d.aggregations.entities.buckets;
+    const entities = elasticHits?.aggregations?.entities?.buckets ?? [];
 
     for (const entity of entities) {
       const assetType = entity.assetTypes.buckets.at(0)?.key;
@@ -50,22 +48,26 @@ export default function useMarkerTransform(elasticHits?: any) {
       const timestamps = entity.timestamp.buckets;
 
       for (const timestamp of timestamps) {
-        en._source!.locationByTime!.push({
-          timestamp: timestamp.key_as_string,
-          location: {
-            lat: timestamp.location.location.lat,
-            lon: timestamp.location.location.lon,
-          },
-        });
+        if (timestamp.location.count > 0) {
+          if (!timestamp.location?.location) {
+            console.warn(`Timestamp found without an location: ${JSON.stringify(timestamp)}`);
+            continue;
+          }
+          en._source!.locationByTime!.push({
+            timestamp: timestamp.key_as_string,
+            location: {
+              lat: timestamp.location.location.lat,
+              lon: timestamp.location.location.lon,
+            },
+          });
+        }
       }
 
       data.push(en);
     }
 
-    return data;
-  }, []);
-
-  return { data };
+    return { data };
+  }, [elasticHits]);
 }
 
 // ==================================================================== HELPERS
