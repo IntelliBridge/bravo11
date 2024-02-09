@@ -304,9 +304,9 @@ function Cop(props: CopProps) {
 
 		const date = time.slice(0, 10);
 		const AISURL = `http://localhost:3001/getBAS/${date}`;
-		console.log(AISURL);
+		const modelURL = `http://localhost:3001/getModelPrediction/${date}`;
 
-		jsonifyFile("http://localhost:3001/getModelPrediction/2023-01-15", setEarthquakeData);
+		jsonifyFile(modelURL, setEarthquakeData);
 		// jsonifyFile("/conf/2023_12_14.geojson", setAISData);
 		jsonifyFile(AISURL, setAISData);
 	}, [time]);
