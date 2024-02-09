@@ -32,8 +32,8 @@ def transform_asset_resp(json_data: dict):
 
 def get_asset_data_from_geo_point(
         es_client: Elasticsearch,
-        top_left: GeoPoint, 
-        bottom_right: GeoPoint, 
+        top_right: GeoPoint, 
+        bottom_left: GeoPoint, 
         asset_type: str = "AssetTypeSatellite",
         max_results: int = 10):
     
@@ -46,14 +46,14 @@ def get_asset_data_from_geo_point(
             "filter": {
                 "geo_bounding_box": {
                 "location": {
-                    "top_left": {
-                        "lat": top_left.lat,
-                        "lon": top_left.lon
+                    "top_right": {
+                        "lat": top_right.lat,
+                        "lon": top_right.lon
                     
                     },
-                    "bottom_right": {
-                        "lat": bottom_right.lat,
-                        "lon": bottom_right.lon
+                    "bottom_left": {
+                        "lat": bottom_left.lat,
+                        "lon": bottom_left.lon
                     }
                 }
                 }

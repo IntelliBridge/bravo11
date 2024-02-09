@@ -11,7 +11,7 @@ SECRET_KEY = env(
     default="atHRUg7pQCh0qpZsnYaLfnKBUH43H3w7h2mbtPqdirWGijPBwjb0IMjLkXbTX7mD",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", ".ngrok-free.app"]
 
 # CACHES
 # ------------------------------------------------------------------------------
@@ -58,3 +58,7 @@ INSTALLED_APPS += ["django_extensions"]  # noqa: F405
 CELERY_TASK_EAGER_PROPAGATES = True
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+
+# disable cors
+CORS_ALLOW_ALL_ORIGINS = True

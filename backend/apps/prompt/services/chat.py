@@ -1,7 +1,7 @@
-from typing import Any, Sequence
+from typing import Any, Sequence, Type
 from langchain.agents import initialize_agent, AgentType, AgentExecutor
 from langchain.memory import ChatMessageHistory
-from langchain_community.llms.bedrock import Bedrock
+from langchain_core.language_models.llms import LLM
 from apps.prompt.services.tools import ship_details
 from apps.prompt.services.prompts import template, template_map
 from langchain.agents import AgentExecutor
@@ -126,22 +126,9 @@ class MessageType:
     user = "user"
     agent = "agent"
 
-def get_bedrock_model(model: str = 'meta.llama2-70b-chat-v1') -> Bedrock:
-    inference_modifier = {
-        "temperature": 0.3,
-        "top_p": 0.9,
-        "max_gen_len": 2048,
-    }
-    return Bedrock(
-        client=get_bedrock_client(),
-        model_id=model,
-        region_name="us-east-1",
-        model_kwargs=inference_modifier
-    )
-
 
 class ChatAgentService:
-    def __init__(self, model: Bedrock) -> None:
+    def __init__(self, model: Type[LLM]) -> None:
         self.model = model
 
         # Setup agent
@@ -182,7 +169,7 @@ class ChatAgentService:
 
         return demo_ephemeral_chat_history
         
-    #TODO: temporary uncomment to disable agent tools
+    # TODO: temporary uncomment to disable agent tools
     # def invoke(self, prompt: str, messages: list[object] = []) -> Any:
     #     chat_message = self._create_messages(messages)
     #     agent_resp = self.agent.invoke({
