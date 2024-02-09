@@ -97,12 +97,7 @@ export default function useBoundingData(
   const fetchData = useCallback(async () => {
     if (!url) return;
     
-    const res = await axios.get(url, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: { query },
-    });
+    const res = await axios.post(url, query);
     
     setData(res.data);
   }, [query, url]);
