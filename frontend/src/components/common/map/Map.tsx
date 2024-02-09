@@ -43,11 +43,35 @@ import useMarkerTransform, {
 import { MarkerData } from "@/types/marker-data";
 import { isEmpty } from "lodash";
 import axios from "axios";
+import { StyleSpecification } from "maplibre-gl";
 
 interface CopProps {
   baseLayers: BaseLayer[];
   dataLayers: DataLayer[];
   terrain: Terrain;
+}
+
+const localTiles : StyleSpecification = {
+  'version': 8,
+  'sources': {
+    'raster-tiles': {
+      'type': 'raster',
+      'tiles': [
+        process.env.PUBLIC_URL + '/tiles/satellite-v2/{z}/{x}/{y}.jpg'
+      ],
+      'tileSize': 512,
+      'attribution': ''
+    }
+  },
+  'layers': [
+    {
+      'id': 'simple-tiles',
+      'type': 'raster',
+      'source': 'raster-tiles',
+      'minzoom': 0,
+      'maxzoom': 22
+    }
+  ]
 }
 
 const { REACT_APP_ES_URL } = process.env;
@@ -67,7 +91,7 @@ function Cop(props: CopProps) {
   const currentTime = useRef<Moment | null>(null);
   const playInterval = useRef<number | null>(null);
 
-  const [baseLayer, setBaseLayer] = useState<string>(props.baseLayers[0].url);
+  // const [baseLayer, setBaseLayer] = useState<string>(props.baseLayers[0].url);
   const [baseLoading, setBaseLoading] = useState(false);
   const [enabledAssets, setEnabledAssets] = useState<string[]>([]);
   const [playing, setPlaying] = useState(false);
@@ -248,26 +272,26 @@ function Cop(props: CopProps) {
     }
   }, [throttleFunc, pauseCustom]);
 
-  const radioButtons: JSX.Element[] = [];
-  props.baseLayers.forEach((l: BaseLayer) => {
-    radioButtons.push(<Radio key={l.name} label={l.name} value={l.url} />);
-  });
-
-  // ===================================================================== TABS
-  const baseLayerTab = (
-    <>
-      <H5 style={{ marginBottom: 20 }}>Base Layers</H5>
-      <RadioGroup
-        selectedValue={baseLayer}
-        onChange={(e: React.FormEvent<HTMLInputElement>) => {
-          setBaseLayer(e.currentTarget.value);
-          setBaseLoading(false);
-        }}
-      >
-        {radioButtons}
-      </RadioGroup>
-    </>
-  );
+  // const radioButtons: JSX.Element[] = [];
+  // props.baseLayers.forEach((l: BaseLayer) => {
+  //   radioButtons.push(<Radio key={l.name} label={l.name} value={l.url} />);
+  // });
+  //
+  // // ===================================================================== TABS
+  // const baseLayerTab = (
+  //   <>
+  //     <H5 style={{ marginBottom: 20 }}>Base Layers</H5>
+  //     <RadioGroup
+  //       selectedValue={baseLayer}
+  //       onChange={(e: React.FormEvent<HTMLInputElement>) => {
+  //         setBaseLayer(e.currentTarget.value);
+  //         setBaseLoading(false);
+  //       }}
+  //     >
+  //       {radioButtons}
+  //     </RadioGroup>
+  //   </>
+  // );
 
   const dataLayerTab = (
     <>
@@ -481,7 +505,7 @@ function Cop(props: CopProps) {
       <Map
         ref={map}
         mapLib={import("maplibre-gl")}
-        mapStyle={baseLayer}
+        mapStyle={localTiles}
         antialias={true}
         onLoad={() => {
           setBaseLoading(true);
@@ -557,7 +581,6 @@ function Cop(props: CopProps) {
               }}
             >
               <Tab id="data" title="Data" />
-              <Tab id="base" title="Base" />
               <Tab id="filter" title="Filter" />
               <Tab id="chat" title="Chat" />
             </Tabs>
@@ -581,7 +604,7 @@ function Cop(props: CopProps) {
             {
               {
                 data: dataLayerTab,
-                base: baseLayerTab,
+                // base: baseLayerTab,
                 filter: filterLayerTab,
                 chat: chatTab,
               }[selectedTab]
