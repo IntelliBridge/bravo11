@@ -38,6 +38,7 @@ import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
 import useMarkerTransform, {
+  ASSET_IMAGES,
   MarkerPropsWithMetadata,
 } from "./useMarkerTransform";
 import { MarkerData } from "@/types/marker-data";
@@ -72,7 +73,7 @@ function Cop(props: CopProps) {
   const [enabledAssets, setEnabledAssets] = useState<string[]>([]);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(NOW.toISOString());
-  const [rate, setRate] = useState(1);
+  const [rate, setRate] = useState(1440);
 
   const [selectedTab, setSelectedTab] = useState("data");
   const [modalOpen, setModalOpen] = useState(true);
@@ -182,11 +183,8 @@ function Cop(props: CopProps) {
   useEffect(() => {
     if (!url) return;
 
-    console.log(JSON.stringify(query, null, "  "));
     axios.post(url, query).then((res) => setData(res.data));
   }, [query, box, url]);
-
-  useEffect(() => console.log(data), [data]);
 
   // const { data: boundingData } = useBoundingData("./mock/data.json");
   const { data: markers } = useMarkerTransform(data);
@@ -239,7 +237,7 @@ function Cop(props: CopProps) {
       );
 
       // currentTime.current = moment();  // todo(myles) uncomment this lmao
-      currentTime.current = moment(new Date("2024-01-01"));
+      currentTime.current = moment(new Date("2024-01-02"));
       timeline.current.addCustomTime(currentTime.current.toDate(), "cursor");
       timeline.current.on("timechange", (t) => {
         pauseCustom();
@@ -427,36 +425,85 @@ function Cop(props: CopProps) {
     </div>
   );
 
-  const points = useMemo(() => {
-    if (!markers) return [];
+  const [points, setPoints] = useState<any[]>([]); // todo(myles) type this
 
+  useEffect(() => {
     const points: any[] = []; // todo(myles) type this
 
-    for (const marker of markers) {
-      let nearestDate: any;
-      const m: Partial<MarkerPropsWithMetadata> = { ...marker };
+    const p = axios
+      .post(
+        url,
+        {
+          size: 1000,
+          query: {
+            bool: {
+              must: [
+                { match_all: {} },
+                {
+                  range: {
+                    timestamp: {
+                      gte: moment(time).subtract(10, "minute").toISOString(),
+                      lte: moment(time).toISOString(),
+                    },
+                  },
+                },
+              ],
+              filter: {
+                geo_bounding_box: {
+                  location: {
+                    top_left: {
+                      lat: 27,
+                      lon: 120,
+                    },
+                    bottom_right: {
+                      lat: 22,
+                      lon: 165,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        { headers: { "Content-Type": "application/json" } }
+      )
+      .then((res) => {
+        console.log(res.data);
+        const markers: MarkerPropsWithMetadata[] = [];
+        for (const entity of res.data.hits.hits) {
+          // const longitude =
+          //   entity._source.location.lon > 90
+          //     ? entity._source.location.lon + 180
+          //     : entity._source.location.lon;
+          const latitude =
+            entity._source.location.lat > 90
+              ? entity._source.location.lat + 180
+              : entity._source.location.lat;
 
-      for (const timestamp of marker._source.locationByTime) {
-        if (nearestDate) {
-          if (moment(timestamp.timestamp).diff(moment(time), "days") < 0) {
-            nearestDate = timestamp.timestamp;
+          const m: MarkerPropsWithMetadata = {
+            longitude: entity._source.location.lon,
+            latitude,
+            _source: entity._source,
+            children: (
+              <img
+                src={
+                  entity._source.assetType
+                    ? ASSET_IMAGES[entity._source.assetType]
+                    : undefined
+                }
+                alt={entity._source.id}
+                height={24}
+                width={24}
+              />
+            ),
+          };
 
-            m.latitude = timestamp.location.lat;
-            m.longitude = timestamp.location.lon;
-          }
-        } else {
-          nearestDate = timestamp.timestamp;
-
-          m.latitude = timestamp.location.lat;
-          m.longitude = timestamp.location.lon;
+          markers.push(m);
         }
-      }
 
-      points.push(m);
-    }
-
-    return points;
-  }, [markers, time]);
+        setPoints(markers);
+      });
+  }, [time, query]);
 
   const handlePopupToggle = (data: MarkerData) => {
     if (!showPopup) {
