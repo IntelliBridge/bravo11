@@ -10,7 +10,7 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm ci
 
-FROM node:alpine as build
+FROM node:alpine as source
 
 WORKDIR /app
 
@@ -22,6 +22,21 @@ COPY ./src ./src
 COPY ./public ./public
 COPY ./tsconfig.json ./
 COPY ./config-overrides.js ./
+
+FROM node:alpine as demo
+
+WORKDIR /app
+
+COPY --from=source /app /app
+
+EXPOSE 3000
+
+ENTRYPOINT ["npm"]
+CMD ["start"]
+
+FROM node:alpine as build
+
+COPY --from=source /app /app
 
 # Build the app
 RUN npm run build

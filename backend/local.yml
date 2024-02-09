@@ -107,3 +107,18 @@ services:
       interval: 10s
       timeout: 10s
       retries: 120
+
+  frontend:
+    # You need to build a tag the frontend first: docker build . --target demo -t signalsight-frontend-demo
+    image: signalsight-frontend-demo
+    # build:
+    #   dockerfile: ../frontend/Dockerfile
+    #   context: ../frontend/
+    #   args:
+    #     - --target demo
+    ports:
+      - 3000:3000
+    environment:
+      REACT_APP_API_URL: "http://nohost.local"
+      REACT_APP_ES_URL: "http://localhost:9200"
+      REACT_APP_DJANGO_URL: "http://localhost:8000"
