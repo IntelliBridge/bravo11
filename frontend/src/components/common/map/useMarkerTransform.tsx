@@ -13,7 +13,7 @@ export const ASSET_IMAGES: Record<string, string> = {
   Satellite: "/markers/satellite.svg",
   Tank: "", // todo(myles) needs svg
   Aircraft: "/markers/plane.svg",
-  "Surface Vessel": "/markers/ship.svg",
+  "Vessel": "/markers/ship.svg",
   "Ground Motor Vehicle": "", // todo(myles) needs svg
   "Bomber Aircraft": "/markers/plane.svg", // todo(myles) maybe needs svg?
 };

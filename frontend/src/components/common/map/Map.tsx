@@ -38,6 +38,7 @@ import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
 import useMarkerTransform, {
+  ASSET_IMAGES,
   MarkerPropsWithMetadata,
 } from "./useMarkerTransform";
 import { MarkerData } from "@/types/marker-data";
@@ -72,7 +73,7 @@ function Cop(props: CopProps) {
   const [enabledAssets, setEnabledAssets] = useState<string[]>([]);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(NOW.toISOString());
-  const [rate, setRate] = useState(1);
+  const [rate, setRate] = useState(1440);
 
   const [selectedTab, setSelectedTab] = useState("data");
   const [modalOpen, setModalOpen] = useState(true);
@@ -182,11 +183,8 @@ function Cop(props: CopProps) {
   useEffect(() => {
     if (!url) return;
 
-    console.log(JSON.stringify(query, null, "  "));
     axios.post(url, query).then((res) => setData(res.data));
   }, [query, box, url]);
-
-  useEffect(() => console.log(data), [data]);
 
   // const { data: boundingData } = useBoundingData("./mock/data.json");
   const { data: markers } = useMarkerTransform(data);
@@ -239,7 +237,7 @@ function Cop(props: CopProps) {
       );
 
       // currentTime.current = moment();  // todo(myles) uncomment this lmao
-      currentTime.current = moment(new Date("2024-01-01"));
+      currentTime.current = moment(new Date("2024-01-02"));
       timeline.current.addCustomTime(currentTime.current.toDate(), "cursor");
       timeline.current.on("timechange", (t) => {
         pauseCustom();
@@ -427,36 +425,144 @@ function Cop(props: CopProps) {
     </div>
   );
 
-  const points = useMemo(() => {
-    if (!markers) return [];
+  const [points, setPoints] = useState<any[]>([]); // todo(myles) type this
 
+  useEffect(() => {
     const points: any[] = []; // todo(myles) type this
 
-    for (const marker of markers) {
-      let nearestDate: any;
-      const m: Partial<MarkerPropsWithMetadata> = { ...marker };
+    const filter = {
+      geo_bounding_box: {
+        location: {
+          top_left: {
+            lat: 30,
+            lon: 117,
+          },
+          bottom_right: {
+            lat: 22,
+            lon: 165,
+          },
+        },
+      },
+    };
 
-      for (const timestamp of marker._source.locationByTime) {
-        if (nearestDate) {
-          if (moment(timestamp.timestamp).diff(moment(time), "days") < 0) {
-            nearestDate = timestamp.timestamp;
+    const vessels =
+      enabledAssets.includes("Vessel") &&
+      axios.post(
+        url,
+        {
+          size: 1000,
+          query: {
+            bool: {
+              must: [
+                { match: { assetType: "Vessel" } },
+                {
+                  range: {
+                    timestamp: {
+                      gte: moment(time).subtract(10, "minute").toISOString(),
+                      lte: moment(time).toISOString(),
+                    },
+                  },
+                },
+              ],
+              filter,
+            },
+          },
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-            m.latitude = timestamp.location.lat;
-            m.longitude = timestamp.location.lon;
-          }
-        } else {
-          nearestDate = timestamp.timestamp;
+    const aircraft =
+      enabledAssets.includes("Aircraft") &&
+      axios.post(
+        url,
+        {
+          size: 1000,
+          query: {
+            bool: {
+              must: [
+                { match: { assetType: "Aircraft" } },
+                {
+                  range: {
+                    timestamp: {
+                      gte: moment(time).subtract(10, "minute").toISOString(),
+                      lte: moment(time).toISOString(),
+                    },
+                  },
+                },
+              ],
+              filter,
+            },
+          },
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-          m.latitude = timestamp.location.lat;
-          m.longitude = timestamp.location.lon;
+    const sats =
+      enabledAssets.includes("Satellite") &&
+      axios.post(
+        url,
+        {
+          size: 1000,
+          query: {
+            bool: {
+              must: [
+                { match: { assetType: "Satellite" } },
+                {
+                  range: {
+                    timestamp: {
+                      gte: moment(time).subtract(1, "day").toISOString(),
+                      lte: moment(time).toISOString(),
+                    },
+                  },
+                },
+              ],
+              filter,
+            },
+          },
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+    Promise.all([vessels, sats, aircraft]).then((res) => {
+      const d = [];
+      const markers = [];
+
+      for (const r of res) {
+        if (r && r.data) {
+          d.push(...r.data.hits.hits);
         }
       }
 
-      points.push(m);
-    }
+      for (const entity of d) {
+        const latitude =
+          entity._source.location.lat > 90
+            ? entity._source.location.lat + 180
+            : entity._source.location.lat;
 
-    return points;
-  }, [markers, time]);
+        const m: MarkerPropsWithMetadata = {
+          longitude: entity._source.location.lon,
+          latitude,
+          _source: entity._source,
+          children: (
+            <img
+              src={
+                entity._source.assetType
+                  ? ASSET_IMAGES[entity._source.assetType]
+                  : undefined
+              }
+              alt={entity._source.id}
+              height={24}
+              width={24}
+            />
+          ),
+        };
+
+        markers.push(m);
+      }
+
+      setPoints(markers);
+    });
+  }, [time, query, enabledAssets]);
 
   const handlePopupToggle = (data: MarkerData) => {
     if (!showPopup) {
@@ -467,7 +573,7 @@ function Cop(props: CopProps) {
       setShowPopup(false);
     }
   };
-
+  
   return (
     <div
       className={"bp4-dark"}
@@ -517,7 +623,9 @@ function Cop(props: CopProps) {
         {/* Stick markers here */}
         {points &&
           points.map(({ _source, ...m }, i) => {
-            return <Marker {...m} onClick={() => console.log("works")} />;
+            return (
+              <Marker key={i} {...m} onClick={() => console.log("works")} />
+            );
           })}
         {/* {markers && */}
         {/*   markers?.map(({ _source, ...m }, i) => { */}
