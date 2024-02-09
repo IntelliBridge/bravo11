@@ -14,7 +14,6 @@ import (
 
 const (
 	flushBytes int = 5e+6 //Flush threshold in bytes
-	assetIndex     = "assets"
 )
 
 var (
@@ -38,7 +37,25 @@ func main() {
 		username    = os.Getenv("ELASTIC_USERNAME")
 		password    = os.Getenv("ELASTIC_PASSWORD")
 		dataDir     = os.Getenv("DATA_DIR")
+		assetIndex  = os.Getenv("ASSET_INDEX")
 	)
+
+	if clusterURLs == "" {
+		log.Fatal("Missing env: ELASTIC_CLUSTER_URLS")
+	}
+	if username == "" {
+		log.Fatal("Missing env: ELASTIC_USERNAME")
+	}
+	if password == "" {
+		log.Fatal("Missing env: ELASTIC_PASSWORD")
+	}
+	if dataDir == "" {
+		log.Fatal("Missing env: DATA_DIR")
+	}
+	if assetIndex == "" {
+		//default name for asset index
+		assetIndex = "assets"
+	}
 
 	clusters := strings.Split(clusterURLs, ",")
 	client := CreateClient(clusters, username, password)
@@ -54,6 +71,10 @@ func main() {
 	aisFolder := filepath.Join(dataDir, "ais")
 	log.Printf("Loading AIS data from %s\n", acledFolder)
 	AppendDataForElasticIndex(client, SourceTypeAIS, assetIndex, aisFolder)
+
+	basFolder := filepath.Join(dataDir, "bas")
+	log.Printf("Loading BAS data from %s\n", basFolder)
+	AppendDataForElasticIndex(client, SourceTypeBAS, assetIndex, basFolder)
 
 	countryFolder := filepath.Join(dataDir, "country_assessment")
 	log.Printf("Loading country data from %s\n", acledFolder)

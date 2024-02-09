@@ -347,6 +347,8 @@ func ConvertCsvToJson(csvFilePath string, sourceType SourceType, itemsToMatch ma
 			raw = transformGdeltExportData(row)
 		case SourceTypeAIS:
 			raw = transformAISDataToAsset(row)
+		case SourceTypeBAS:
+			raw = transformBASDataToAsset(row)
 		default:
 			raw = make(map[string]interface{})
 			for k, v := range row {
@@ -664,6 +666,60 @@ func transformAISDataToAsset(data map[string]string) map[string]interface{} {
 			EntityID:   data["mmsi"],
 			AssetType:  AssetTypeVessel,
 			SourceType: SourceTypeAIS,
+			Location:   *location,
+			Timestamp:  *timestamp,
+		}
+		addAssetLocationFields(assetLocation, output)
+	}
+	return output
+}
+
+func transformBASDataToAsset(data map[string]string) map[string]interface{} {
+	var location *Location
+	var timestamp *time.Time
+	output := make(map[string]interface{})
+	for k, v := range data {
+		output[k] = v
+	}
+
+	if startTime, ok := data["timestamp"]; ok {
+		// Parse the given time string assuming it's in UTC
+		parsedTime, err := time.Parse(time.RFC3339, startTime)
+		if err != nil {
+			log.Printf("error parsing Time as time: %v\n", err)
+		}
+
+		t := parsedTime.UTC()
+		//output["BaseDateTime"] = t
+		timestamp = &t
+	}
+
+	latStr, ok1 := data["latitude"]
+	lonStr, ok2 := data["longitude"]
+	if ok1 && ok2 {
+		lat, err := strconv.ParseFloat(latStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+		lon, err := strconv.ParseFloat(lonStr, 32)
+		if err != nil {
+			log.Printf("%v\n", err)
+			return nil
+		}
+
+		location = &Location{
+			//shifting data to southern china sea area
+			Lat: lat,
+			Lon: lon,
+		}
+	}
+
+	if location != nil && timestamp != nil {
+		assetLocation := AssetLocation{
+			EntityID:   data["entityId"],
+			AssetType:  AssetTypeSatellite,
+			SourceType: SourceTypeBAS,
 			Location:   *location,
 			Timestamp:  *timestamp,
 		}

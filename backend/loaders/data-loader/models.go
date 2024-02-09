@@ -17,6 +17,7 @@ const (
 	SourceTypeInfra             SourceType = "Infra"
 	SourceTypeNatoRedBlue       SourceType = "NATORedBlue"
 	SourceTypeAIS               SourceType = "AIS"
+	SourceTypeBAS               SourceType = "BAS"
 )
 
 type AssetType string

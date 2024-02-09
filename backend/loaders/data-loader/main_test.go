@@ -63,9 +63,15 @@ func TestInsertSatelliteCSVs(t *testing.T) {
 }
 
 func TestInsertAISCSVs(t *testing.T) {
-	inputFolder := "../../data/aiscsv"
+	inputFolder := "../../data/aisFeb23_Feb24csv"
 	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
 	ResetDataForElasticIndex(client, SourceTypeAIS, "ais-assets", ASSET_MAPPING, inputFolder)
+}
+
+func TestInsertBASCSVs(t *testing.T) {
+	inputFolder := "../../data/bas"
+	client := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
+	ResetDataForElasticIndex(client, SourceTypeBAS, "bas-assets", ASSET_MAPPING, inputFolder)
 }
 
 func TestInsertAdsbCSVs(t *testing.T) {
