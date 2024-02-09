@@ -25,7 +25,6 @@ export default function useBoundingData(
   const [data, setData] = useState<any>(null);
 
   const query = useMemo(() => {
-
     const query = {
       size: 0,
       query: {
@@ -94,13 +93,17 @@ export default function useBoundingData(
     }
     console.log('query', query);
     return query;
-  }, [box, assetTypes]);
+  }, [startDate, endDate, assetTypes, box?._ne.lat, box?._ne.lng, box?._sw.lat, box?._sw.lng]);
 
   const fetchData = useCallback(async () => {
     if (!url) return;
-
-    const res = await axios.post<estypes.SearchResponseBody>(url, query);
-    setData(res.data.hits.hits);
+    
+    const res = await axios.get(url, {
+      headers: {},
+      data: { query },
+    });
+    
+    setData(res.data);
   }, [query, url]);
 
   useEffect(() => {

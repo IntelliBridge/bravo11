@@ -75,8 +75,11 @@ function Cop(props: CopProps) {
   const [modalOpen, setModalOpen] = useState(true);
 
   const [bounds, setBounds] = useState<BoundingBox>(); // don't use this for now lmao
-  const { data: boundingData } = useBoundingData("https://ad7a-72-253-135-20.ngrok-free.app/ais-assets/_search");
+  // const { data: boundingData } = useBoundingData("https://ad7a-72-253-135-20.ngrok-free.app/ais-assets/_search");
+  const { data: boundingData } = useBoundingData("./mock/data.json");
   const { data: markers } = useMarkerTransform(boundingData);
+  
+  useEffect(() => console.log(markers), [markers]);
 
   const [showPopup, setShowPopup] = useState(false);
   const [popupData, setPopupData] = useState<MarkerData | null>(null);
@@ -388,17 +391,17 @@ function Cop(props: CopProps) {
               </Popup>
           )}
         {/* Stick markers here */}
-        {markers &&
-          markers?.map(({ _source, ...m }, i) => {
-              const markerData: MarkerData = {
-                  lat: _source?.location.lat ?? 0,
-                  lng: _source?.location.lon ?? 0,
-                  metadata: {id: _source?.entityId}
-              }
-              return (
-                  <Marker {...(m as MarkerProps)} onClick={() => handlePopupToggle(markerData)}/>
-              )
-          })}
+        {/* {markers && */}
+        {/*   markers?.map(({ _source, ...m }, i) => { */}
+        {/*       const markerData: MarkerData = { */}
+        {/*           lat: _source?.location.lat ?? 0, */}
+        {/*           lng: _source?.location.lon ?? 0, */}
+        {/*           metadata: {id: _source?.entityId} */}
+        {/*       } */}
+        {/*       return ( */}
+        {/*           <Marker {...(m as MarkerProps)} onClick={() => handlePopupToggle(markerData)}/> */}
+        {/*       ) */}
+        {/*   })} */}
       </Map>
       {timebar}
       <div
