@@ -101,7 +101,7 @@ const ChatMainPage = (props: ChatProps) => {
 
   const fetchAnswer = async (q: string) => {
     try {
-      const url = "https://5bb0-72-253-135-20.ngrok-free.app/api/v1/prompt/";
+      const url = `${process.env.REACT_APP_DJANGO_URL}/api/v1/prompt/`;
       const query: any = {
         "prompt": q,
         "bounding_box": {
@@ -122,17 +122,15 @@ const ChatMainPage = (props: ChatProps) => {
       const result = await axios.post(url, query)
       console.log(result);
       // fake user typing
-      setTimeout(() => {
-        const d = new Date();
+      const d = new Date();
 
-        const newMessage = {
-          from: "LL2Bot",
-          to: "User1",
-          text: result.data.message,
-          time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-        setData((prevState) => [...prevState, newMessage]);
-      }, 200);
+      const newMessage = {
+        from: "LL2Bot",
+        to: "User1",
+        text: result.data.message,
+        time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setData((prevState) => [...prevState, newMessage]);
     } catch (e) {
       const d = new Date();
       const newMessage = {

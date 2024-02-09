@@ -24,7 +24,7 @@ import {
   H6,
   Checkbox,
 } from "@blueprintjs/core";
-import Map, { MapRef, Popup } from "react-map-gl/maplibre";
+import Map, { MapRef, Popup, Marker } from "react-map-gl/maplibre";
 import { OutlinedInput } from "@mui/material";
 
 import { BaseLayer, DataLayer, Terrain } from "../../../types/map";
@@ -42,7 +42,6 @@ import useMarkerTransform, {
   MarkerPropsWithMetadata,
 } from "./useMarkerTransform";
 import { MarkerData } from "@/types/marker-data";
-import { Marker } from "react-map-gl";
 
 interface CopProps {
   baseLayers: BaseLayer[];
