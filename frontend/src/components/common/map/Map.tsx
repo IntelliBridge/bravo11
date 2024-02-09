@@ -498,7 +498,7 @@ function Cop(props: CopProps) {
       );
 
     const sats =
-      enabledAssets.includes("Satellites") &&
+      enabledAssets.includes("Satellite") &&
       axios.post(
         url,
         {
