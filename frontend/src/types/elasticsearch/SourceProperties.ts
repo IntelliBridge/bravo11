@@ -1,7 +1,11 @@
-export type SourceProperties = {
-  entityId: string;
-  assetType: string;
-  sourceType: string;
+export type LocationByTime = {
+  timestamp: string | Date;
   location: { lat: number; lon: number };
-  timestamp: string | Date; // This comes back as a string, but we should be able to store as a date on the frontend
+}
+
+export type Entity = {
+  id: string;
+  assetType?: string;
+  sourceType?: string;
+  locationByTime: LocationByTime[];
 };
