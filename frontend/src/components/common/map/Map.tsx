@@ -73,7 +73,7 @@ function Cop(props: CopProps) {
   const [bounds, setBounds] = useState<BoundingBox>();
   // todo(myles) i mean, remove the one from the json right
   const { data: boundingData } = useBoundingData(
-    "https://ad7a-72-253-135-20.ngrok-free.app/ais-assets/_search",
+    "https://ad7a-72-253-135-20.ngrok-free.app/assets/_search",
     {
       _ne: { lat: bounds?._ne.lat || 0, lng: bounds?._ne.lng || 0 },
       _sw: { lat: bounds?._sw.lat || 0, lng: bounds?._sw.lng || 0 },
