@@ -1,4 +1,10 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import moment, { Moment } from "moment";
 import {
   Timeline,
@@ -19,7 +25,13 @@ import {
   H6,
   Checkbox,
 } from "@blueprintjs/core";
-import Map, { Layer, MapProvider, MapRef, Marker, MarkerProps } from "react-map-gl/maplibre";
+import Map, {
+  Layer,
+  MapProvider,
+  MapRef,
+  Marker,
+  MarkerProps,
+} from "react-map-gl/maplibre";
 import { OutlinedInput } from "@mui/material";
 
 import { BaseLayer, DataLayer, Terrain } from "../../../types/map";
@@ -124,7 +136,7 @@ function Cop(props: CopProps) {
     radioButtons.push(<Radio key={l.name} label={l.name} value={l.url} />);
   });
 
-  // ===================================================================== TABS 
+  // ===================================================================== TABS
   const baseLayerTab = (
     <>
       <H5 style={{ marginBottom: 20 }}>Base Layers</H5>
@@ -223,9 +235,9 @@ function Cop(props: CopProps) {
     </>
   );
 
-  const chatTab = <Chat bounds={bounds} assetId={""}/>;
+  const chatTab = <Chat bounds={bounds} assetId={""} />;
 
-  // ================================================================== TIMEBAR 
+  // ================================================================== TIMEBAR
   const timebar = (
     <div
       style={{
@@ -319,7 +331,7 @@ function Cop(props: CopProps) {
     </div>
   );
 
-  const points = useMemo(() => {}, [])
+  const points = useMemo(() => {}, []);
 
   return (
     <div
@@ -346,9 +358,10 @@ function Cop(props: CopProps) {
         }}
       >
         {/* Stick markers here */}
-        {markers && markers?.map((m, i) => (
-          <Marker {...m as MarkerProps} />
-        ))}
+        {markers &&
+          markers?.map(({ _source, ...m }, i) => (
+            <Marker {...(m as MarkerProps)} />
+          ))}
       </Map>
       {timebar}
       <div

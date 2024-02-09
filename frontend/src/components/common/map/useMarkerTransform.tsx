@@ -6,6 +6,10 @@ import { estypes } from "@elastic/elasticsearch";
 import { MarkerProps } from "react-map-gl"; // instead of going to geojson, just create markers
 import { type SourceProperties } from "@/types/elasticsearch/SourceProperties";
 
+export interface MarkerPropsWithMetadata extends MarkerProps {
+  _source?: SourceProperties;
+}
+
 const ASSET_IMAGES: Record<string, string> = {
   Satellite: "/markers/satellite.svg",
   Tank: "", // todo(myles) needs svg
@@ -23,7 +27,7 @@ export default function useMarkerTransform<T extends SourceProperties>(
     if (!elasticHits || elasticHits?.length === 0) return;
 
     const hits: estypes.SearchHit<T>[] = elasticHits;
-    const markers: MarkerProps[] | undefined = hits
+    const markers: MarkerPropsWithMetadata[] | undefined = hits
       .map((hit) => {
         const source = hit._source;
         if (!source) return undefined; // just get rid of hits without a source for now
@@ -40,7 +44,8 @@ export default function useMarkerTransform<T extends SourceProperties>(
           <img src={DEFAULT_ASSET_IMAGE} alt={source.entityId} />
         );
 
-        const m: MarkerProps = {
+        const m: MarkerPropsWithMetadata = {
+          _source: source,
           anchor: "center",
           latitude: source.location.lat,
           longitude: source.location.lon,
