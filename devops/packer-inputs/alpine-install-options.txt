@@ -1,0 +1,14 @@
+KEYMAPOPTS="us us"
+HOSTNAMEOPTS="-n intellinauts"
+INTERFACESOPTS="auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+"
+TIMEZONEOPTS="-z UTC"
+PROXYOPTS="none"
+APKREPOSOPTS="-1"
+SSHDOPTS="-c openssh"
+NTPOPTS="-c openntpd"
+DISKOPTS="-L -m sys /dev/sda"
