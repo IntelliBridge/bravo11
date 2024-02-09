@@ -29,7 +29,6 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
-
 interface CopProps {
 	baseLayers: BaseLayer[];
 	dataLayers: DataLayer[];
@@ -224,13 +223,13 @@ function Cop(props: CopProps) {
 	const [baseLoading, setBaseLoading] = useState(false);
 	const [layers, setLayers] = useState<string[]>([]);
 	const [playing, setPlaying] = useState(false);
-	const [time, setTime] = useState(moment().toISOString());
+	const [time, setTime] = useState("2023-01-01T12:58:09.673Z");
 	const [rate, setRate] = useState(1);
 	const [earthquakeData, setEarthquakeData] = useState({} as string);
 	const [AISData, setAISData] = useState({} as string);
 
 	const earthquakeLayer: DataLayer = {
-		name: "Earthquakes",
+		name: "Model Prediction Heatmap",
 		group: "OSINT",
 		type: "geojson",
 		timeWindow: 2592000000,
@@ -244,7 +243,7 @@ function Cop(props: CopProps) {
 			maxzoom: 9,
 			paint: {
 				// Increase the heatmap weight based on frequency and property magnitude
-				"heatmap-weight": ["interpolate", ["linear"], ["get", "mag"], 0, 0, 6, 1],
+				"heatmap-weight": ["interpolate", ["linear"], ["get", "probability"], 0, 0, 6, 4],
 				// Increase the heatmap color weight weight by zoom level
 				// heatmap-intensity is a multiplier on top of heatmap-weight
 				"heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 9, 3],
@@ -277,7 +276,7 @@ function Cop(props: CopProps) {
 	};
 
 	const AISLayer: DataLayer = {
-		name: "AIS Data",
+		name: "BAS Synthetic Data",
 		group: "OSINT",
 		type: "geojson",
 		timeWindow: 2592000000,
@@ -289,7 +288,7 @@ function Cop(props: CopProps) {
 			type: "circle",
 			source: "AISData",
 			paint: {
-				"circle-radius": 5,
+				"circle-radius": 2.5,
 				"circle-color": "#FF007F",
 			},
 		},
@@ -303,9 +302,14 @@ function Cop(props: CopProps) {
 			setter(json);
 		};
 
-		jsonifyFile("/conf/earthquakes.geojson", setEarthquakeData);
-		jsonifyFile("/conf/2023_12_14.geojson", setAISData);
-	}, []);
+		const date = time.slice(0, 10);
+		const AISURL = `http://localhost:3001/getBAS/${date}`;
+		console.log(AISURL);
+
+		jsonifyFile("http://localhost:3001/getModelPrediction/2023-01-15", setEarthquakeData);
+		// jsonifyFile("/conf/2023_12_14.geojson", setAISData);
+		jsonifyFile(AISURL, setAISData);
+	}, [time]);
 
 	let earthquakeSourceData: AnySourceData = {
 		type: "geojson",
@@ -540,7 +544,8 @@ function Cop(props: CopProps) {
 
 			timeline.current = new Timeline(timelineContainer.current, dataset, options);
 
-			currentTime.current = moment();
+			currentTime.current = moment("2023-01-01T12:58:09.673Z");
+
 			timeline.current.addCustomTime(currentTime.current.toDate(), "cursor");
 			timeline.current.on("timechange", (t) => {
 				pauseCustom();
