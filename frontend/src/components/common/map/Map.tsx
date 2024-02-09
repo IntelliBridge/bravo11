@@ -53,6 +53,13 @@ interface CopProps {
 
 const { REACT_APP_ES_URL } = process.env;
 const LAYERS = ["Satellite", "Aircraft", "Vessel"];
+const SOURCE_LAYERS: Record<string, string[]> = {
+  OSINT: ["GDELT", "ACLED", "Infrastructure"],
+  HUMINT: ["NATO Assets", "Country Assessments"],
+  MASINT: ["Vessels", "Aircraft"],
+  SIGINT: ["Satellites"],
+  GEOINT: ["BAS"],
+};
 
 console.log('establishing "NOW"');
 const NOW = moment();
@@ -70,7 +77,7 @@ function Cop(props: CopProps) {
 
   const [baseLayer, setBaseLayer] = useState<string>(props.baseLayers[0].url);
   const [baseLoading, setBaseLoading] = useState(false);
-  const [enabledAssets, setEnabledAssets] = useState<string[]>([]);
+  const [enabledAssets, setEnabledAssets] = useState<string[]>([...LAYERS]);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(NOW.toISOString());
   const [rate, setRate] = useState(1440);
@@ -270,20 +277,31 @@ function Cop(props: CopProps) {
   const dataLayerTab = (
     <>
       <H5 style={{ marginBottom: 20 }}>Data Layers</H5>
-      {LAYERS.map((l) => {
+      {Object.keys(SOURCE_LAYERS).map((key) => {
         return (
-          <Checkbox
-            key={l}
-            label={l}
-            checked={enabledAssets.includes(l)}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              if (e.target.checked) {
-                setEnabledAssets((prev) => [...prev, l]);
-              } else {
-                setEnabledAssets((prev) => prev.filter((id) => id !== l));
-              }
-            }}
-          />
+          <React.Fragment key={key}>
+            <H6>{key}</H6>
+            {SOURCE_LAYERS[key].map((label) => {
+              return (
+                <React.Fragment key={label}>
+                  <Checkbox
+                    key={label}
+                    label={label}
+                    checked={enabledAssets.includes(label)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      if (e.target.checked) {
+                        setEnabledAssets((prev) => [...prev, label]);
+                      } else {
+                        setEnabledAssets((prev) =>
+                          prev.filter((id) => id !== label)
+                        );
+                      }
+                    }}
+                  />
+                </React.Fragment>
+              );
+            })}
+          </React.Fragment>
         );
       })}
     </>
@@ -428,8 +446,6 @@ function Cop(props: CopProps) {
   const [points, setPoints] = useState<any[]>([]); // todo(myles) type this
 
   useEffect(() => {
-    const points: any[] = []; // todo(myles) type this
-
     const filter = {
       geo_bounding_box: {
         location: {
@@ -446,7 +462,7 @@ function Cop(props: CopProps) {
     };
 
     const vessels =
-      enabledAssets.includes("Vessel") &&
+      enabledAssets.includes("Vessels") &&
       axios.post(
         url,
         {
@@ -498,7 +514,7 @@ function Cop(props: CopProps) {
       );
 
     const sats =
-      enabledAssets.includes("Satellite") &&
+      enabledAssets.includes("Satellites") &&
       axios.post(
         url,
         {
@@ -573,7 +589,7 @@ function Cop(props: CopProps) {
       setShowPopup(false);
     }
   };
-  
+
   return (
     <div
       className={"bp4-dark"}
@@ -600,8 +616,8 @@ function Cop(props: CopProps) {
       >
         {showPopup && (
           <Popup
-            longitude={popupData?.lng ?? 0}
-            latitude={popupData?.lat ?? 0}
+            longitude={popupData?.lat ?? 0}
+            latitude={popupData?.lng ?? 0}
             closeOnClick={false}
             onClose={() => {
               setShowPopup(false);
@@ -624,7 +640,19 @@ function Cop(props: CopProps) {
         {points &&
           points.map(({ _source, ...m }, i) => {
             return (
-              <Marker key={i} {...m} onClick={() => console.log("works")} />
+              <Marker
+                key={i}
+                onClick={() => {
+                  console.log(m);
+                  setShowPopup(true);
+                  setPopupData({
+                    lat: m.latitude,
+                    lng: m.longitude,
+                    metadata: { id: _source.id },
+                  });
+                }}
+                {...m}
+              />
             );
           })}
         {/* {markers && */}
