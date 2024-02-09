@@ -65,11 +65,11 @@ func main() {
 	ResetDataForElasticIndex(client, SourceTypeACLED, "acled", ACLED_MAPPING, acledFolder)
 
 	adsbFolder := filepath.Join(dataDir, "adsb")
-	log.Printf("Loading ADSB data from %s\n", acledFolder)
+	log.Printf("Loading ADSB data from %s\n", adsbFolder)
 	ResetDataForElasticIndex(client, SourceTypeADSB, assetIndex, ASSET_MAPPING, adsbFolder)
 
 	aisFolder := filepath.Join(dataDir, "ais")
-	log.Printf("Loading AIS data from %s\n", acledFolder)
+	log.Printf("Loading AIS data from %s\n", aisFolder)
 	AppendDataForElasticIndex(client, SourceTypeAIS, assetIndex, aisFolder)
 
 	basFolder := filepath.Join(dataDir, "bas")
@@ -77,7 +77,7 @@ func main() {
 	AppendDataForElasticIndex(client, SourceTypeBAS, assetIndex, basFolder)
 
 	countryFolder := filepath.Join(dataDir, "country_assessment")
-	log.Printf("Loading country data from %s\n", acledFolder)
+	log.Printf("Loading country data from %s\n", countryFolder)
 	ResetDataForElasticIndex(client, SourceTypeCountryAssessment, "country-assessment", "", countryFolder)
 
 	gdeltExportFolder := filepath.Join(dataDir, "gdelt", "export")

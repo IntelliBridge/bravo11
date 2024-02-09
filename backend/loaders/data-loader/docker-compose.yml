@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  loader:
+    image: data-loader:latest
+    environment:
+      - ELASTIC_CLUSTER_URLS="http://localhost:9200"
+      - ELASTIC_USERNAME="elastic"
+      - ELASTIC_PASSWORD="changeme"
+      - DATA_DIR="/data"
+      - ASSET_INDEX="test-assets"
+    volumes:
+      - ./data:/data

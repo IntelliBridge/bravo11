@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"testing"
 )
 
@@ -42,6 +43,15 @@ func TestDownloadGdelt(t *testing.T) {
 			panic(err)
 		}
 	}
+}
+
+func TestDeleteIndex(t *testing.T) {
+	es := CreateClient([]string{"http://localhost:9200"}, "elastic", "changeme")
+	res, err := es.Indices.Delete([]string{"ais"}, es.Indices.Delete.WithIgnoreUnavailable(true))
+	if err != nil || res.IsError() {
+		log.Fatalf("Cannot delete index: %s", err)
+	}
+	res.Body.Close()
 }
 
 func TestInsertGdeltExportCSVs(t *testing.T) {

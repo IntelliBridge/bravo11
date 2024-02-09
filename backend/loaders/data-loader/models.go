@@ -60,6 +60,17 @@ type Location struct {
 	Lat float64 `json:"lat"`
 	Lon float64 `json:"lon"`
 }
+
+func (l Location) ToLonLatArray() LonLatArray {
+	return LonLatArray{
+		LonLatArray: []float64{l.Lon, l.Lat},
+	}
+}
+
+type LonLatArray struct {
+	LonLatArray []float64 `json:"lonLatArray"`
+}
+
 type GeoLocation struct {
 	Lat string `json:"lat"`
 	Lon string `json:"lon"`

@@ -19,7 +19,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
-	"unicode"
 )
 
 func CreateClient(clusterURLs []string, username string, password string) *elasticsearch.Client {
@@ -80,29 +79,29 @@ func InsertCSVDataToElastic(es *elasticsearch.Client, sourceType SourceType, ind
 	dataset := make([]interface{}, 0)
 	itemsToMatch := make(map[string]bool)
 
-	if sourceType == SourceTypeAIS && len(items) > 0 {
-		csvFile, err := os.Open(filepath.Join(inputFolder, items[0].Name()))
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		reader := csv.NewReader(csvFile)
-		reader.FieldsPerRecord = -1
-		reader.LazyQuotes = true
-
-		for {
-			r, err := reader.Read()
-			if err == io.EOF {
-				break
-			}
-			if len(itemsToMatch) < 5000 {
-				itemsToMatch[r[0]] = true
-			} else {
-				break
-			}
-		}
-		csvFile.Close()
-	}
+	//if sourceType == SourceTypeAIS && len(items) > 0 {
+	//	csvFile, err := os.Open(filepath.Join(inputFolder, items[0].Name()))
+	//	if err != nil {
+	//		fmt.Println(err)
+	//	}
+	//
+	//	reader := csv.NewReader(csvFile)
+	//	reader.FieldsPerRecord = -1
+	//	reader.LazyQuotes = true
+	//
+	//	for {
+	//		r, err := reader.Read()
+	//		if err == io.EOF {
+	//			break
+	//		}
+	//		if len(itemsToMatch) < 5000 {
+	//			itemsToMatch[r[0]] = true
+	//		} else {
+	//			break
+	//		}
+	//	}
+	//	csvFile.Close()
+	//}
 	for _, item := range items {
 		if !item.IsDir() {
 			info, err := item.Info()
@@ -302,6 +301,10 @@ func AddHeaderToCsv(inputFilePath string, outputFilePath string, header []string
 	}
 }
 
+func IsAssetField(field string) bool {
+	return field == "assetType" || field == "sourceType" || field == "entityId" || field == "lonLatArray"
+}
+
 func ConvertCsvToJson(csvFilePath string, sourceType SourceType, itemsToMatch map[string]bool) []interface{} {
 	csvFile, err := os.Open(csvFilePath)
 	if err != nil {
@@ -323,11 +326,11 @@ func ConvertCsvToJson(csvFilePath string, sourceType SourceType, itemsToMatch ma
 		if err == io.EOF {
 			break
 		}
-		if sourceType == SourceTypeAIS {
-			if _, exist := itemsToMatch[r[0]]; !exist {
-				continue
-			}
-		}
+		//if sourceType == SourceTypeAIS {
+		//	if _, exist := itemsToMatch[r[0]]; !exist {
+		//		continue
+		//	}
+		//}
 
 		row := make(map[string]string)
 
@@ -359,7 +362,10 @@ func ConvertCsvToJson(csvFilePath string, sourceType SourceType, itemsToMatch ma
 		if raw != nil {
 			newMap := make(map[string]interface{})
 			for k, v := range raw {
-				fieldName := formatFieldName(k)
+				fieldName := k
+				if !IsAssetField(fieldName) {
+					fieldName = formatFieldName(fieldName)
+				}
 				newMap[fieldName] = v
 			}
 			data = append(data, newMap)
@@ -389,9 +395,8 @@ func ConvertCsvToJson(csvFilePath string, sourceType SourceType, itemsToMatch ma
 func formatFieldName(input string) string {
 	formattedString := strings.ReplaceAll(input, " ", "_")
 	formattedString = strings.ReplaceAll(formattedString, "-", "_")
-	r := []rune(formattedString)
-	r[0] = unicode.ToLower(r[0])
-	return string(r)
+	formattedString = strings.ToLower(formattedString)
+	return formattedString
 }
 
 func transformGdeltExportData(data map[string]string) map[string]interface{} {
@@ -738,4 +743,5 @@ func addAssetLocationFields(location AssetLocation, data map[string]interface{})
 	data["sourceType"] = location.SourceType
 	data["location"] = location.Location
 	data["timestamp"] = location.Timestamp
+	data["lonLatArray"] = location.Location.ToLonLatArray()
 }
