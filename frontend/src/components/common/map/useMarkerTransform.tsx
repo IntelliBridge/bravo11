@@ -6,7 +6,14 @@ import { estypes } from "@elastic/elasticsearch";
 import { MarkerProps } from "react-map-gl"; // instead of going to geojson, just create markers
 import { type SourceProperties } from "@/types/elasticsearch/SourceProperties";
 
-const ASSET_IMAGES: Record<string, string> = {};
+const ASSET_IMAGES: Record<string, string> = {
+  Satellite: "/markers/satellite.svg",
+  Tank: "", // todo(myles) needs svg
+  Airplane: "/markers/plane.svg",
+  "Surface Vessel": "/markers/ship.svg",
+  "Ground Motor Vehicle": "", // todo(myles) needs svg
+  "Bomber Aircraft": "/markers/plane.svg", // todo(myles) maybe needs svg?
+};
 const DEFAULT_ASSET_IMAGE = "https://via.placeholder.com/30";
 
 export default function useMarkerTransform<T extends SourceProperties>(
@@ -24,12 +31,17 @@ export default function useMarkerTransform<T extends SourceProperties>(
         // todo(myles) determine the asset type, pick an image based on that type
 
         const children = ASSET_IMAGES[source.assetType] ? (
-          <img src={ASSET_IMAGES[source.assetType]} alt={source.entityId} />
+          <img
+            src={ASSET_IMAGES[source.assetType]}
+            alt={source.entityId}
+            style={{ maxHeight: "20%", maxWidth: "20%" }}
+          />
         ) : (
           <img src={DEFAULT_ASSET_IMAGE} alt={source.entityId} />
         );
 
         const m: MarkerProps = {
+          anchor: "center",
           latitude: source.location.lat,
           longitude: source.location.lon,
           children,
@@ -38,8 +50,8 @@ export default function useMarkerTransform<T extends SourceProperties>(
         return m;
       })
       .filter(isMarkerProps);
-    
-      return markers;
+
+    return markers;
   }, [elasticHits]);
 
   return { data };

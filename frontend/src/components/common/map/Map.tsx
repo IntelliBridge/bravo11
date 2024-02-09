@@ -19,7 +19,7 @@ import {
   H6,
   Checkbox,
 } from "@blueprintjs/core";
-import Map, { Layer, MapProvider, MapRef, Marker } from "react-map-gl/maplibre";
+import Map, { Layer, MapProvider, MapRef, Marker, MarkerProps } from "react-map-gl/maplibre";
 import { OutlinedInput } from "@mui/material";
 
 import { BaseLayer, DataLayer, Terrain } from "../../../types/map";
@@ -33,6 +33,7 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
+import useMarkerTransform from "./useMarkerTransform";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -62,7 +63,7 @@ function Cop(props: CopProps) {
 
   const [bounds, setBounds] = useState<BoundingBox>(); // don't use this for now lmao
   const { data: boundingData } = useBoundingData("/mock/some-data.json");
-  const { data: boundingDataSource } = useGeoTransform(boundingData);
+  const { data: markers } = useMarkerTransform(boundingData);
 
   const throttleFunc = throttle(1000, (t) => {
     currentTime.current = moment(t.time);
@@ -123,6 +124,7 @@ function Cop(props: CopProps) {
     radioButtons.push(<Radio key={l.name} label={l.name} value={l.url} />);
   });
 
+  // ===================================================================== TABS 
   const baseLayerTab = (
     <>
       <H5 style={{ marginBottom: 20 }}>Base Layers</H5>
@@ -174,7 +176,6 @@ function Cop(props: CopProps) {
     });
   }, [props.dataLayers]);
 
-  // ===================================================================== TABS 
   const dataLayerTab = (
     <>
       <H5 style={{ marginBottom: 20 }}>Data Layers</H5>
@@ -318,12 +319,6 @@ function Cop(props: CopProps) {
     </div>
   );
 
-  // deleteme(myles) used for testing
-  useEffect(() => {
-    const current = map.current?.getMap();
-    if (!current || !boundingDataSource) return;
-  }, []);
-  
   const points = useMemo(() => {}, [])
 
   return (
@@ -349,30 +344,11 @@ function Cop(props: CopProps) {
           const { _sw, _ne } = map.current?.getBounds();
           setBounds({ _sw, _ne });
         }}
-        initialViewState={{ latitude: 0, longitude: 0, zoom: 4 }}
       >
-        {boundingDataSource &&
-          boundingDataSource.features.map((f, i) => {
-            if (f.geometry.type === "Point") {
-              console.log("writing point", f.geometry.coordinates); // deleteme(myles)
-              return (
-                <Marker
-                  key={i}
-                  latitude={f.geometry.coordinates.at(0) || 0}
-                  longitude={f.geometry.coordinates.at(1) || 0}
-                  anchor="center"
-                >
-                  <img
-                    src="/markers/sat.png"
-                    alt="ship"
-                    style={{ height: "25%", width: "25%" }}
-                  />
-                </Marker>
-              );
-            } else {
-              return null;
-            }
-          })}
+        {/* Stick markers here */}
+        {markers && markers?.map((m, i) => (
+          <Marker {...m as MarkerProps} />
+        ))}
       </Map>
       {timebar}
       <div
