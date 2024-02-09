@@ -33,6 +33,8 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "@blueprintjs/table/lib/css/table.css";
 import "vis-timeline/dist/vis-timeline-graph2d.min.css";
 import "./Map.css";
+import useElasticSearchQuery from "@/hooks/useElasticSearchQuery";
+import axios from "axios";
 
 interface CopProps {
   baseLayers: BaseLayer[];
@@ -62,7 +64,8 @@ function Cop(props: CopProps) {
 
   const [bounds, setBounds] = useState<BoundingBox>(); // don't use this for now lmao
   const { data: boundingData } = useBoundingData("/mock/some-data.json");
-  const { data: boundingDataSource } = useGeoTransform(boundingData);
+  const [boundingDataSource, setBoundingDataSource] = useState<GeoJSON.FeatureCollection | null>(null);
+  // const { data: boundingDataSource } = useGeoTransform(boundingData);
 
   const throttleFunc = throttle(1000, (t) => {
     currentTime.current = moment(t.time);
@@ -323,6 +326,45 @@ function Cop(props: CopProps) {
     const current = map.current?.getMap();
     if (!current || !boundingDataSource) return;
   }, []);
+
+  useEffect(() => {
+      if (bounds) {
+          handleBoundsChange();
+      }
+  }, [bounds]);
+
+  const handleBoundsChange = async () => {
+      // fetch elastic data here
+      const url = `${process.env.REACT_APP_ES_URL}/assets/_search`;
+      const query: any = {
+          size: 0,
+          "query": {
+              "bool": {
+                  "filter": {
+                      "geo_bounding_box": {
+                          "location": {
+                              "top_right": {
+                                  "lat": bounds?._ne.lat,
+                                  "lon": bounds?._ne.lng
+                              },
+                              "bottom_left": {
+                                  "lat": bounds?._sw.lat,
+                                  "lon": bounds?._sw.lng
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      }
+
+      try {
+          const res = await axios.post(url, query);
+          console.log(res)
+      } catch (e) {
+          console.log(e);
+      }
+  }
   
   const points = useMemo(() => {}, [])
 
@@ -349,12 +391,16 @@ function Cop(props: CopProps) {
           const { _sw, _ne } = map.current?.getBounds();
           setBounds({ _sw, _ne });
         }}
+        onMoveEnd={() => {
+            if (!map.current) return;
+            const { _sw, _ne } = map.current?.getBounds();
+            setBounds({ _sw, _ne });
+        }}
         initialViewState={{ latitude: 0, longitude: 0, zoom: 4 }}
       >
         {boundingDataSource &&
           boundingDataSource.features.map((f, i) => {
             if (f.geometry.type === "Point") {
-              console.log("writing point", f.geometry.coordinates); // deleteme(myles)
               return (
                 <Marker
                   key={i}

@@ -101,7 +101,7 @@ const ChatMainPage = (props: ChatProps) => {
 
   const fetchAnswer = async (q: string) => {
     try {
-      const url = "https://5bb0-72-253-135-20.ngrok-free.app/api/v1/prompt/";
+      const url = `${process.env.REACT_APP_LL_URL}/api/v1/prompt/`;
       const query: any = {
         "prompt": q,
         "bounding_box": {
@@ -120,7 +120,6 @@ const ChatMainPage = (props: ChatProps) => {
         query.assetId = props.assetId;
       }
       const result = await axios.post(url, query)
-      console.log(result);
       // fake user typing
       setTimeout(() => {
         const d = new Date();
@@ -144,10 +143,6 @@ const ChatMainPage = (props: ChatProps) => {
       setData((prevState) => [...prevState, newMessage]);
     }
   }
-
-  useEffect(() => {
-    console.log(data)
-  }, [data]);
 
   const handleEnter = (
     event: React.KeyboardEvent<HTMLDivElement> | undefined

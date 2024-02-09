@@ -18,11 +18,11 @@ const useElasticSearchQuery = (index: string, boundingBox: GeoBoundingBox, aggs?
                         "filter": {
                             "geo_bounding_box": {
                                 "location": {
-                                    "top_left": {
+                                    "top_right": {
                                         "lat": boundingBox.topLeftLat,
                                         "lon": boundingBox.topLeftLon
                                     },
-                                    "bottom_right": {
+                                    "bottom_left": {
                                         "lat": boundingBox.bottomRightLat,
                                         "lon": boundingBox.bottomRightLon
                                     }
